@@ -1,0 +1,59 @@
+# Build output
+/build/
+/dist/
+**/Debug/
+**/Release/
+**/x64/
+**/*.tlog/
+
+# Compiled files
+*.slo
+*.lo
+*.o
+*.obj
+*.gch
+*.pch
+*.so
+*.dylib
+*.dll
+*.mod
+*.lai
+*.la
+*.a
+*.lib
+*.exe
+*.out
+*.app
+*.res
+*.iobj
+*.ipdb
+*.idb
+*.pdb
+*.ilk
+*.recipe
+*.log
+*.mid
+
+# Locally extracted and generated editor assets
+/exports/
+
+# Visual Studio
+/.vs/
+/.bkp/
+/ipch/
+/.wiki/
+*.sdf
+*.opensdf
+*.aps
+*.VC.opendb
+*.VC.db
+*.vcxproj.user
+
+# Local ROMs and emulator state
+*/asm/
+*.sfc
+*.smc
+*.fig
+*.swc
+*.srm
+*.state
