@@ -3207,23 +3207,10 @@ void SC4Core::LoadTilesAndPalettes()
 		addrList.push_back((0x81 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x86946F + level * 2)));	// palette animation 
 	}
 	else if (type == 0x1) {
-		addrList.push_back(0x8787EE);
+	//	addrList.push_back(0x8787EE);		// first level. TODO HUD ENEMY 
+		addrList.push_back((0x87 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x81A478 + level * 2)));	// tile palette
 
-		//addrList.push_back(0x8587C3);
-		//addrList.push_back(0x8587E1);
-		//addrList.push_back(0x8587EA);
-		//addrList.push_back(0x8587D8);
-		//addrList.push_back(0x85854B);
-		//addrList.push_back(0x858412);
-
-		//addrList.push_back(0x858AC7);
-		//addrList.push_back(0x85A815);
-		//addrList.push_back(0x85A830);
-
-		//addrList.push_back(0x85854B);
-
-		//addrList.push_back(0x858412);
-		//addrList.push_back(0x858AC7);
+		// CONTRA.. 
 		//addrList.push_back((0x85 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x858A21 + *LPBYTE(rom + SNESCore::snes2pc(0x8589CC + (level + 1))))));
 
 		// FIXME: 
@@ -3231,62 +3218,86 @@ void SC4Core::LoadTilesAndPalettes()
 		//addrList.push_back((0x85 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x85CD21 + level * 2)));
 	}
 
-
+	
 	addrList.insert(addrList.end(), dynPalTable.begin(), dynPalTable.end());
+	if (type == 0x0) {
 
-	for (auto addr : addrList) {
-		if (*(rom + SNESCore::snes2pc(addr))) {
-			BYTE t = *(rom + SNESCore::snes2pc(addr));
-			addr += t == 4 ? 0 : 1;
+		for (auto addr : addrList) {
+			if (*(rom + SNESCore::snes2pc(addr))) {
+				// SC4 Palette. Main Level list at 0x8693E7. The data pointer are in the data bank 0x81. The palette data is in the same bank as the main pointer. (0x86)
+				// AA BBBB CCCC DDDD 
+				// AA = List identifyer
+				// BBBB = WORD16 witch seems always 0??
+				// CCCC = Dest WARAM (WRAM 0X7E2200 memory mirror to be DMAed to the PPU)
+				// DDDD = Source offset (in bank 86) or terminator if 0x0000 
+				// (continues with CCCC,DDDD,CCCC,DDDD..)
 
-			if (t != 1) continue;
+				// at palette data location the first byte is the size of the palette. Followed by the BGR color values. 
 
-			// weird extra 0.  seems like a countdown timer for loading palette?
-			addr += 2;
-			while (WORD srcOffset = *LPWORD(rom + SNESCore::snes2pc(addr))) {
-				addr += 2;
-				WORD dstOffset = *LPWORD(rom + SNESCore::snes2pc(addr));
-				addr += 2;
+				BYTE t = *(rom + SNESCore::snes2pc(addr));
+				addr += t == 4 ? 0 : 1;
+				if (t != 1) continue;
+				
+				addr += 2;	// 0?? (see above BBBB + byte)
+				while (WORD srcOffset = *LPWORD(rom + SNESCore::snes2pc(addr))) {
+					addr += 2;
+					WORD dstOffset = *LPWORD(rom + SNESCore::snes2pc(addr));
+					addr += 2;
 
-				unsigned palIndex = (dstOffset - 0x2200) / 2;
-				DWORD srcAddr = ((type == 0x0 ? 0x86 : type == 0x1 ? 0x88 : 0x84) << 16) | srcOffset;
-				WORD size = *LPWORD(rom + SNESCore::snes2pc(srcAddr)) + 1;
-				srcAddr += 2;
-				for (int i = palIndex, j = 0; i < palIndex + size / 2; i++, j += 2) {
-					palCache[i] = Get16Color(SNESCore::snes2pc(srcAddr) + j);
-					palCacheOffset[i] = SNESCore::snes2pc(srcAddr) + j;
+					unsigned palIndex = (dstOffset - 0x2200) / 2;
+					DWORD srcAddr = ((0x86) << 16) | srcOffset;					//		DWORD srcAddr = ((type == 0x0 ? 0x86 : type == 0x1 ? 0x88 : 0x84) << 16) | srcOffset;   // bank offsets for both games 
+					WORD size = *LPWORD(rom + SNESCore::snes2pc(srcAddr)) + 1;
+					srcAddr += 2;
+					for (int i = palIndex, j = 0; i < palIndex + size / 2; i++, j += 2) {
+						palCache[i] = Get16Color(SNESCore::snes2pc(srcAddr) + j);
+						palCacheOffset[i] = SNESCore::snes2pc(srcAddr) + j;
+					}
+
 				}
+			}
+		}
+	}
+	else if (type == 0x1) {
+		for (auto addr : addrList) {
+			if (*(rom + SNESCore::snes2pc(addr))) {
+				
+				// Dracula X Palette. Main Stage list at 0x81A45D. Does at up as continues Level enteries below at 0x81A478. 
+				// SRC/DEST/size pointers in bank 0x87. Palette data in bank 0x90.
+				// AAAA BBBB CCCC 
+				// BBBB = Source offset (in bank 87) or terminator if 0xFFFF
+				// CCCC = Dest WARAM (WRAM 0X7ED200 imemory mirror to be DMAed to the PPU)
+				// DDDD = Size of palette data (in bytes) or terminator if 0xFFFF
+				// (continues with BBBB,CCCC,DDDD,BBBB,CCCC,DDDD..)
 
+				WORD t = *(rom + SNESCore::snes2pc(addr));
+				addr += t == 1;		// what is "0 ? 4" used for??
+				if (t != 1) continue;
+
+				addr += 1;
+				for (WORD srcOffset = *LPWORD(rom + SNESCore::snes2pc(addr));
+					srcOffset != 0xFFFF;
+					srcOffset = *LPWORD(rom + SNESCore::snes2pc(addr))) {
+					DWORD srcAddr = (0x90 << 16) | srcOffset;
+					addr += 2;
+
+					WORD dstOffset = *LPWORD(rom + SNESCore::snes2pc(addr));
+					addr += 2;
+
+					WORD size = *LPWORD(rom + SNESCore::snes2pc(addr));
+					addr += 2;
+
+					unsigned palIndex = (dstOffset - 0xD200) / 2;
+					for (int i = palIndex, j = 0; i < palIndex + size / 2; i++, j += 2) {
+						palCache[i] = Get16Color(SNESCore::snes2pc(srcAddr) + j);
+						palCacheOffset[i] = SNESCore::snes2pc(srcAddr) + j;
+					}
+				}
 			}
 		}
 
-		//if (*(rom + SNESCore::snes2pc(addr))) {
-		//	BYTE t = *(rom + SNESCore::snes2pc(addr));
-		//	addr += t == 4 ? 0 : 1;
-		//
-		//	if (t != 1) continue;
-		//
-		//	// weird extra 0.  seems like a countdown timer for loading palette?
-		//	addr += 2;
-		//	while (WORD srcOffset = *LPWORD(rom + SNESCore::snes2pc(addr))) {
-		//		addr += 2;
-		//		WORD dstOffset = *LPWORD(rom + SNESCore::snes2pc(addr));
-		//		addr += 2;
-		//
-		//		unsigned palIndex = (dstOffset - 0x2200) / 2;
-		//		DWORD srcAddr = ((type == 0x0 ? 0x86 : type == 0x1 ? 0x88 : 0x84) << 16) | srcOffset;
-		//		WORD size = *LPWORD(rom + SNESCore::snes2pc(srcAddr)) + 1;
-		//		srcAddr += 2;
-		//		for (int i = palIndex, j = 0; i < palIndex + size / 2; i++, j += 2) {
-		//			palCache[i] = Get16Color(SNESCore::snes2pc(srcAddr) + j);
-		//			palCacheOffset[i] = SNESCore::snes2pc(srcAddr) + j;
-		//		}
-		//
-		//	}
-		//}
-
-
+	
 	}
+
 
 	//pPalBase = snes2pc(p_palett[type]);
 	//DWORD configPointer = snes2pc(SReadWord(p_palett[type] + level*2 + 0x60) | 0x860000);
