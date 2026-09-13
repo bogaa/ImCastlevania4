@@ -40,31 +40,16 @@ const char *levelsName[][0x44] = {
 		"B-1-1", "B-1-2", "B-2-1", "B-3-1", "B-3-2", "B-3-3", "B-4-1", "B-4-2",
 	},
 	{
-		"Stage 1",
-		"Stage 2",
-		"Stage 3",
-		"Stage 4",
-		"Stage 5",
-		"Stage 6",
+		"Stage 1-1", "Stage 1-2", "Stage 1-3", "Stage 1-4", "Stage 1-5", "Stage 1-6",
+		"Stage 2-1", "Stage 2-2", "Stage 2-3", "Stage 2-4", "Stage 2-5", "Stage 2-6",
+		"Stage 3-1", "Stage 3-2", "Stage 3-3", "Stage 3-4", "Stage 3-5", "Stage 3-6", "Stage 3-7", "Stage 3-8",
+		"Stage 4-1", "Stage 4-2", "Stage 4-3", "Stage 4-4", "Stage 4-5", "Stage 4-6", "Stage 4-7", "Stage 4-8",
+		"Stage 5-1", "Stage 5-2", "Stage 5-3", "Stage 5-4", "Stage 5-5", "Stage 5-6", "Stage 5-7",
+		"Stage 6-1", "Stage 6-2", "Stage 6-3", "Stage 6-4", "Stage 6-5", "Stage 6-6", "Stage 6-7", "Stage 6-8", "Stage 6-9",
+		"Stage 7-1", "Stage 7-2", "Stage 7-3", "Stage 7-4", "Stage 7-5", "Stage 7-6", "Stage 7-7", "Stage 7-8", "Stage 7-9",
+		"Stage A-1", "Stage A-2", "Stage A-3", "Stage A-4", "Stage A-5", "Stage A-6", "Stage A-7",
+		"Stage B-1", "Stage B-2", "Stage B-3", "Stage B-4", "Stage B-5", "Stage B-6", "Stage B-7",
 	},
-	{
-		"Stage 1",
-		"Stage 2",
-		"Stage 3",
-		"Stage 4",
-		"Stage 5",
-		"Stage 6",
-		"Stage 7",
-		"Stage 8",
-		"Stage 9",
-		"Stage 10",
-		"Stage 11",
-		"Stage 12",
-		"Stage 13",
-		"Stage 14",
-		"Stage 15",
-	},
-
 };
 
 static const UINT32	crc32Table[256] =
@@ -128,31 +113,31 @@ const WORD SC4Core::levelFormatVersion = 2;
 #define SReadDWord(offset) (*((DWORD*)(rom+SNESCore::snes2pc(offset))))
 #define SReadLpByte(offset) (((LPBYTE)(rom+SNESCore::snes2pc(offset))))
 
-const long p_layout[3] = {NULL, NULL, NULL};		
-const long p_scenes[3] = {NULL, NULL, NULL};
-const long p_blocks[3] = {NULL, NULL, NULL};
-const long p_maps  [3] = {NULL, NULL, NULL};
-const long p_collis[3] = {NULL, NULL, NULL};
-const long p_checkp[3] = {NULL, NULL, NULL};
-const long p_palett[3] = {NULL, NULL, NULL};
-const long p_font  [3] = {NULL, NULL, NULL};
-const long p_unknow[3] = {NULL, NULL, NULL}; 
-const long p_gfxcfg[3] = {NULL, NULL, NULL};
-const long p_gfxpos[3] = {NULL,	NULL, NULL};
-const long p_events[3] = {0x80D81B, 0x85947C, 0x81AE9A};	// evPointer SC4, Contra3, Gradius
-const long p_borders[3]= {NULL, NULL, NULL};
-const long p_locks[3]  = {NULL, NULL, NULL};
-const long p_properties[3] = { NULL, NULL, NULL };
-const long p_spriteAssembly[3] = { NULL, NULL, NULL };
-const long p_spriteOffset[3] = { NULL, NULL, NULL };
-const long p_objOffset[3] = { NULL, NULL, NULL };
-const long p_gfxobj[3] = { NULL, NULL, NULL };	// enemy
-const long p_gfxpal[3] = { NULL, NULL, NULL };
-//const long p_capsulepos[3] = { NULL, NULL, NULL };
+const long p_layout[2] = {NULL, NULL};		
+const long p_scenes[2] = {NULL, NULL};
+const long p_blocks[2] = {NULL, NULL};
+const long p_maps  [2] = {NULL, NULL};
+const long p_collis[2] = {NULL, NULL};
+const long p_checkp[2] = {NULL, NULL};
+const long p_palett[2] = {NULL, NULL};
+const long p_font  [2] = {NULL, NULL};
+const long p_unknow[2] = {NULL, NULL}; 
+const long p_gfxcfg[2] = {NULL, NULL};
+const long p_gfxpos[2] = {NULL,	NULL};
+const long p_events[2] = {0x80D81B, 0x81A8AE};	// evPointer SC4, DracX StageP 81A89A
+const long p_borders[2]= { NULL, NULL };
+const long p_locks[2]  = { NULL, NULL };
+const long p_properties[2] = { NULL, NULL };
+const long p_spriteAssembly[2] = { NULL, NULL };
+const long p_spriteOffset[2] = { NULL, NULL };
+const long p_objOffset[2] = { NULL, NULL };
+const long p_gfxobj[2] = { NULL, NULL };	// enemy
+const long p_gfxpal[2] = { NULL, NULL };
+//const long p_capsulepos[2] = { NULL, NULL, NULL };
 
-const long p_blayout[3] = { NULL, NULL, NULL };
-const long p_bscenes[3] = { NULL, NULL, NULL };
-const long p_bblocks[3] = { NULL, NULL, NULL };
+const long p_blayout[2] = { NULL, NULL };
+const long p_bscenes[2] = { NULL, NULL };
+const long p_bblocks[2] = { NULL, NULL };
 
 // collusionByteNames
 std::map<unsigned, std::string> TileTypeMap = {
@@ -266,17 +251,16 @@ void SC4Core::GenerateExpandedOffset() {
 		for (unsigned i = 0; i < numLevels; i++) {
 			DWORD addr;
 			////addrList.push_back(0x81B5D9); // bg tile map
-			//addrList.push_back(0x86889C); // bg tiles
-			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x86889C) + (i * 2));
+			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x86889C) + (i * 2));		// GFX LVL
 			addrList.push_back(addr);
-			//addrList.push_back(0x868B45); // bg tiles
-			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x868B45) + (i * 2));
+			
+			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x868B45) + (i * 2));		// GFX enemy 
 			addrList.push_back(addr);
-			//addrList.push_back(0x868000); // bg map indices
-			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x868000) + (i * 2));
+			
+			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x868000) + (i * 2));		// Block Map
 			addrList.push_back(addr);
-			//addrList.push_back(0x86831E);
-			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x86831e) + (i * 2));
+			
+			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x86831e) + (i * 2));		// Scene Map
 			addrList.push_back(addr);
 		}
 
@@ -286,61 +270,23 @@ void SC4Core::GenerateExpandedOffset() {
 	else if (type == 1) {
 		for (unsigned i = 0; i < numLevels; i++) {
 			DWORD addr;
-			//// C3
+			//// Dracula X 
 			// ???
 			if (i < numLevels - 1) {
-				addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8587F1) + ((i + 1) * 2));
+				addr = 0x82 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A519) + ((i + 1) * 2));		// GFX LVL expand 
 				addrList.push_back(addr);
 			}
 			// ???
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588E1) + ((i + 1) * 2));
-			addrList.push_back(addr);
+			//addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x) + ((i + 1) * 2));			// GFX enemy 
+			//addrList.push_back(addr);
 			// ???
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588ED) + ((i + 1) * 2));
+			addr = 0x82 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A5BA) + ((i + 1) * 2));			// Block Map
 			addrList.push_back(addr);
 
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x858A0D) + (i * 2));
-			addrList.push_back(addr);
+			//addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x818000) + (i * 2));				// Scene Map
+			//addrList.push_back(addr);
 		}
 	}
-	else if (type == 2) {
-
-		for (unsigned i = 0; i < numLevels; i++) {
-			DWORD addr;
-
-			// X (0)
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81AADA) + (i * 2));
-			addrList.push_back(addr);
-
-			// not loaded on level 0
-			//addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81AEB8) + (level * 2));
-			//addrList.push_back(addr);
-
-			//addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A22A) + (level * 2));
-			//addrList.push_back(addr);
-
-			// X (2)
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A24C) + ((i + 1) * 2));
-			addrList.push_back(addr);
-
-			// X (2)
-			// FIXME: only 0x5 of these
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A254) + ((0 + 1) * 2));
-			addrList.push_back(addr);
-
-			// X (0)
-			// FIXME: only 0xA of these
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A25E) + (i * 2));
-			addrList.push_back(addr);
-
-			//addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x818937) + (level * 2));
-			//addrList.push_back(addr);
-			// G3
-		}
-
-		addrList.push_back(0x8183B2); // dynamic tiles
-	}
-
 	std::map<DWORD, DWORD> addrMap;
 
 	unsigned count = 0;
@@ -403,19 +349,12 @@ BYTE SC4Core::CheckROM()
 		eventOffsetLimit = 0xBCF8;
 		// FIXME: check for expandedROM and reload expandedOffset
 	}
-	else if (!strncmp(header->title, "CONTRA3 THE ALIEN WARS", strlen("CONTRA3 THE ALIEN WARS"))) {
+	else if (!strncmp(header->title, "CASTLEVANIA DRACULA X", strlen("CASTLEVANIA DRACULA X"))) {
 		type = 1;
 		region = 0;
-		numLevels = 0x6;
-		eventBank = 0x85;
+		numLevels = 0x45;		// FIXME more support 69
+		eventBank = 0x89;
 		eventOffsetLimit = 0x0000;
-	}
-	else if (!strncmp(header->title, "gradius 3", strlen("gradius 3"))) {
-		type = 2;
-		region = 0;
-		numLevels = 0xA;
-		eventBank = 0x81;
-		eventOffsetLimit = 0xD5D8;
 	}
 	else {
 		type = 0xFF;
@@ -497,136 +436,31 @@ bool SC4Core::GetBaseAddr(unsigned mode, DWORD addr, DWORD &baseAddr, WORD &newS
 	}
 	else if (type == 1) {
 		switch (mode) {
-			// multiple levels share a partial set of tiles making this painful to setup.
+
 		case 0x0000:
-			// 2 bytes
-			// TODO: figure out which one is VRAM
-			if (0x3000 <= addr && addr < 0x4000) {
-				baseAddr = 0x3000;
-				newSize = 0x2000;
-				found = true;
-			}
-			break;
-			//case 0x0000:
-		case 0x0002:
-		case 0x0003:
-		case 0xA001:
-			break;
 		default:
-			// 3 bytes
-			//if (0x7E6000 <= addr && addr < 0x7E8000) {
-			//	baseAddr = 0x7E6000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			//else if (0x7E8000 <= addr && addr < 0x7EA000) {
-			//	baseAddr = 0x7E8000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			//else if (0x7EC000 <= addr && addr < 0x7EE000) {
-			//	baseAddr = 0x7EC000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			//else if (0x7EE000 <= addr && addr < 0x7F0000) {
-			//	baseAddr = 0x7EE000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			if (0x7E5000 <= addr && addr < 0x7E7000) {
-				baseAddr = 0x7E5000;
+			// DracX default untested. But did rip from this addresses. 
+			if (0x7f0000 <= addr && addr < 0x7f2000) {
+				baseAddr = 0x7f0000;
 				newSize = 0x2000;
 				found = true;
 			}
-			if (0x7E7000 <= addr && addr < 0x7E9000) {
-				baseAddr = 0x7E7000;
+			else if (0x7f2000 <= addr && addr < 0x7f4000) {
+				baseAddr = 0x7f2000;
 				newSize = 0x2000;
 				found = true;
 			}
-			//if (0x7EB000 <= addr && addr < 0x7ED000) {
-			//	baseAddr = 0x7EB000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			if (0x7F0000 <= addr && addr < 0x7F8000) {
-				baseAddr = 0x7F0000;
-				newSize = 0x8000;
-				found = true;
-			}
-			if (0x7F8000 <= addr && addr < 0x800000) {
-				baseAddr = 0x7F8000;
-				newSize = 0x8000;
-				found = true;
-			}
-			break;
-		}
-	}
-	else if (type == 2) { // FIXME:
-		switch (mode) {
-			// multiple levels share a partial set of tiles making this painful to setup.
-		case 0x0000:
-			// 2 bytes
-			// TODO: figure out which one is VRAM
-			//if (0x3000 <= addr && addr < 0x4000) {
-			//	baseAddr = 0x3000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			break;
-			//case 0x0000:
-		case 0x0002:
-		case 0x0003:
-		case 0xA001:
-			break;
-		default:
-			// 3 bytes
-			//if (0x7E6000 <= addr && addr < 0x7E8000) {
-			//	baseAddr = 0x7E6000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			//else if (0x7E8000 <= addr && addr < 0x7EA000) {
-			//	baseAddr = 0x7E8000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			//else if (0x7EC000 <= addr && addr < 0x7EE000) {
-			//	baseAddr = 0x7EC000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			//else if (0x7EE000 <= addr && addr < 0x7F0000) {
-			//	baseAddr = 0x7EE000;
-			//	newSize = 0x2000;
-			//	found = true;
-			//}
-			if (0x7EA000 <= addr && addr < 0x7EB000) {
-				baseAddr = 0x7EA000;
+			else if (0x7f4000 <= addr && addr < 0x7f5000) {
+				baseAddr = 0x7f4000;
 				newSize = 0x1000;
 				found = true;
 			}
-			if (0x7EB000 <= addr && addr < 0x7EC000) {
-				baseAddr = 0x7EB000;
+			else if (0x7f5000 <= addr && addr < 0x7f6000) {
+				baseAddr = 0x7f5000;
 				newSize = 0x1000;
 				found = true;
 			}
-			if (0x7EE000 <= addr && addr < 0x7EF000) {
-				baseAddr = 0x7EE000;
-				newSize = 0x1000;
-				found = true;
-			}
-			if (0x7EF000 <= addr && addr < 0x7F0000) {
-				baseAddr = 0x7EF000;
-				newSize = 0x1000;
-				found = true;
-			}
-			// maybe to 0x7FC0000?
-			if (0x7F0000 <= addr && addr < 0x7FB9C0) {
-				baseAddr = 0x7F0000;
-				newSize = 0xB9C0;
-				found = true;
-			}
+
 			break;
 		}
 	}
@@ -638,7 +472,7 @@ bool SC4Core::ExpandROM() {
 	// Check if it's the original ROM
 	// 1) total ROM size
 	// 2) checksum
-	if (header->romSize != (type == 2 ? 0x9 : 0xA) || region != 0x0) {
+	if (header->romSize != 0xA || region != 0x0) {
 		return false;
 	}
 
@@ -646,7 +480,7 @@ bool SC4Core::ExpandROM() {
 	header->romSize = 0xC;
 	romSize = 0x400000;
 
-	memset(rom + (type == 2 ? 0x80000 : 0x100000), 0xFF, romSize - (type == 2 ? 0x80000 : 0x100000));
+	memset(rom + 0x100000, 0xFF, romSize - 0x100000);
 
 	LPBYTE expandedRomHeaderAddress = rom + 0x100000 + 0x8000 - expandedROMHeaderSize;
 	strcpy((char*)(expandedRomHeaderAddress), expandedROMString);
@@ -2273,217 +2107,7 @@ bool SC4Core::ExpandROM() {
 	else if (type == 1) {
 
 	}
-	else if (type == 2) {
-		DWORD a = 0;
-		DWORD addr = 0;
-
-		// expand events
-		for (unsigned i = 0; i < numLevels; i++) {
-			DWORD pEvents = snes2pc(SReadWord(p_events[type] + i * 2) | (eventBank << 16));
-			LPBYTE pevent = rom + pEvents;
-			auto oldpevent = pevent;
-
-			// fix table
-			*LPWORD(rom + snes2pc(p_events[type] + i * 2)) = romAddr - 0x100000;
-
-			while (*LPWORD(pevent) != 0xFFFF) {
-				memcpy(rom + romAddr, pevent, 4);
-				memset(pevent, 0xFF, 4);
-
-				// get the next event
-				pevent += 4;
-				romAddr += 4;
-			}
-
-			// double event byte count + terminator
-			// just terminator.  allow addevent/deleteevent to take care of updates
-			unsigned count = /*(pevent - oldpevent) + */4;
-			memset(rom + romAddr, 0xFF, count);
-			romAddr += count;
-		}
-		// make sure we didn't use too much space
-		if (romAddr >= 0x110000) return false;
-
-		// fix the bank addresses
-		eventBank = 0xA1;
-		*LPBYTE(rom + snes2pc(0x80F766) + 0) = eventBank;
-
-		// need to make room to change LDs to long
-		a = 0x80FA00;
-		// LDA 3,Y
-		*LPBYTE(rom + snes2pc(a++)) = 0xB9;
-		*LPBYTE(rom + snes2pc(a++)) = 0x03;
-		*LPBYTE(rom + snes2pc(a++)) = 0x00;
-		// AND #FF
-		*LPBYTE(rom + snes2pc(a++)) = 0x29;
-		*LPBYTE(rom + snes2pc(a++)) = 0xFF;
-		*LPBYTE(rom + snes2pc(a++)) = 0x00;
-		// TAX
-		*LPBYTE(rom + snes2pc(a++)) = 0xAA;
-		// RTS
-		*LPBYTE(rom + snes2pc(a++)) = 0x60;
-
-		// fix - jmp to shortcut, move up load and make direct
-		a = 0x80F8D7;
-		// PHX
-		//*LPBYTE(rom + snes2pc(a++)) = 0xDA;
-		// JSR $FA00
-		*LPBYTE(rom + snes2pc(a++)) = 0x20;
-		*LPBYTE(rom + snes2pc(a++)) = 0x00;
-		*LPBYTE(rom + snes2pc(a++)) = 0xFA;
-		// LDA $81XXXX, X
-		*LPBYTE(rom + snes2pc(a++)) = 0xBF;
-		*LPBYTE(rom + snes2pc(a++)) = 0xB8;
-		*LPBYTE(rom + snes2pc(a++)) = 0xAE;
-		*LPBYTE(rom + snes2pc(a++)) = 0x81;
-		// TAX
-		*LPBYTE(rom + snes2pc(a++)) = 0xAA;
-		// PLA
-		//*LPBYTE(rom + snes2pc(a++)) = 0x68;
-		// PADDING NOP
-		*LPBYTE(rom + snes2pc(a++)) = 0xEA;
-		*LPBYTE(rom + snes2pc(a++)) = 0xEA;
-
-		a = 0x80FA20;
-		// PHB
-		*LPBYTE(rom + snes2pc(a++)) = 0x8B;
-		// LDA #0101
-		*LPBYTE(rom + snes2pc(a++)) = 0xA9;
-		*LPBYTE(rom + snes2pc(a++)) = 0x01;
-		*LPBYTE(rom + snes2pc(a++)) = 0x01;
-		// PHA
-		*LPBYTE(rom + snes2pc(a++)) = 0x48;
-		// PLB
-		*LPBYTE(rom + snes2pc(a++)) = 0xAB;
-		// PLB
-		*LPBYTE(rom + snes2pc(a++)) = 0xAB;
-		// LoadPalette*
-		*LPBYTE(rom + snes2pc(a++)) = 0x22;
-		*LPBYTE(rom + snes2pc(a++)) = 0x6E;
-		*LPBYTE(rom + snes2pc(a++)) = 0x9D;
-		*LPBYTE(rom + snes2pc(a++)) = 0x00;
-		// PLB
-		*LPBYTE(rom + snes2pc(a++)) = 0xAB;
-		// RTS
-		*LPBYTE(rom + snes2pc(a++)) = 0x60;
-
-		// fix - jmp to shortcut, move up load and make direct
-		a = 0x80F8F1;
-		// PHX
-		*LPBYTE(rom + snes2pc(a++)) = 0xDA;
-		// JSR $FA00
-		*LPBYTE(rom + snes2pc(a++)) = 0x20;
-		*LPBYTE(rom + snes2pc(a++)) = 0x00;
-		*LPBYTE(rom + snes2pc(a++)) = 0xFA;
-		// LDA $81XXXX, X
-		*LPBYTE(rom + snes2pc(a++)) = 0xBF;
-		*LPBYTE(rom + snes2pc(a++)) = 0xEE;
-		*LPBYTE(rom + snes2pc(a++)) = 0xAE;
-		*LPBYTE(rom + snes2pc(a++)) = 0x81;
-		// TAY
-		*LPBYTE(rom + snes2pc(a++)) = 0xA8;
-		// PLX
-		*LPBYTE(rom + snes2pc(a++)) = 0xFA;
-		// wrapper JSL
-		*LPBYTE(rom + snes2pc(a++)) = 0x20;
-		*LPBYTE(rom + snes2pc(a++)) = 0x20;
-		*LPBYTE(rom + snes2pc(a++)) = 0xFA;
-		// PADDING NOP
-		*LPBYTE(rom + snes2pc(a++)) = 0xEA;
-		*LPBYTE(rom + snes2pc(a++)) = 0xEA;
-
-		// fix - jmp to shortcut, move up load and make direct
-		a = 0x80F91A;
-		// PHX
-		//*LPBYTE(rom + snes2pc(a++)) = 0xDA;
-		// JSR $FA00
-		*LPBYTE(rom + snes2pc(a++)) = 0x20;
-		*LPBYTE(rom + snes2pc(a++)) = 0x00;
-		*LPBYTE(rom + snes2pc(a++)) = 0xFA;
-		// LDA $81XXXX, X
-		*LPBYTE(rom + snes2pc(a++)) = 0xBF;
-		*LPBYTE(rom + snes2pc(a++)) = 0x4E;
-		*LPBYTE(rom + snes2pc(a++)) = 0xAF;
-		*LPBYTE(rom + snes2pc(a++)) = 0x81;
-		// TAX
-		*LPBYTE(rom + snes2pc(a++)) = 0xAA;
-		// PLA
-		//*LPBYTE(rom + snes2pc(a++)) = 0x68;
-		// PADDING NOP
-		*LPBYTE(rom + snes2pc(a++)) = 0xEA;
-		*LPBYTE(rom + snes2pc(a++)) = 0xEA;
-		*LPBYTE(rom + snes2pc(a++)) = 0xEA;
-
-		// fix function call to have absolute
-		a = 0x808734;
-		// PHX
-		*LPBYTE(rom + snes2pc(a++)) = 0xDA;
-		// LDX D,$5A
-		*LPBYTE(rom + snes2pc(a++)) = 0xA6;
-		*LPBYTE(rom + snes2pc(a++)) = 0x5A;
-		// LDA $811F2D,X
-		*LPBYTE(rom + snes2pc(a++)) = 0xBF;
-		*LPBYTE(rom + snes2pc(a++)) = 0x2D;
-		*LPBYTE(rom + snes2pc(a++)) = 0x1F;
-		*LPBYTE(rom + snes2pc(a++)) = 0x81;
-		// PLX
-		*LPBYTE(rom + snes2pc(a++)) = 0xFA;
-		// TAY - to set codes
-		*LPBYTE(rom + snes2pc(a++)) = 0xA8;
-		//// PHA
-		//*LPBYTE(rom + snes2pc(a++)) = 0x48;
-		//// PLA
-		//*LPBYTE(rom + snes2pc(a++)) = 0x68;
-		// BPL
-		*LPBYTE(rom + snes2pc(a++)) = 0x10;
-		*LPBYTE(rom + snes2pc(a++)) = 0x07;
-		// BIT #4000
-		*LPBYTE(rom + snes2pc(a++)) = 0x89;
-		*LPBYTE(rom + snes2pc(a++)) = 0x00;
-		*LPBYTE(rom + snes2pc(a++)) = 0x40;
-		// BEQ
-		*LPBYTE(rom + snes2pc(a++)) = 0xF0;
-		*LPBYTE(rom + snes2pc(a++)) = 0x07;
-		// RTL
-		*LPBYTE(rom + snes2pc(a++)) = 0x6B;
-		//*LPBYTE(rom + snes2pc(a++)) = 0xEA;
-
-		// second function call to be absolute
-		a = 0x80FA10;
-		// AND #00FC
-		*LPBYTE(rom + snes2pc(a++)) = 0x29;
-		*LPBYTE(rom + snes2pc(a++)) = 0xFC;
-		*LPBYTE(rom + snes2pc(a++)) = 0x00;
-		// ORA D,$58
-		*LPBYTE(rom + snes2pc(a++)) = 0x05;
-		*LPBYTE(rom + snes2pc(a++)) = 0x58;
-		// TAX
-		*LPBYTE(rom + snes2pc(a++)) = 0xAA;
-		// TAY
-		*LPBYTE(rom + snes2pc(a++)) = 0xA8;
-		// RTS
-		*LPBYTE(rom + snes2pc(a++)) = 0x60;
-
-		a = 0x809745;
-		// JSR $FA10
-		*LPBYTE(rom + snes2pc(a++)) = 0x20;
-		*LPBYTE(rom + snes2pc(a++)) = 0x10;
-		*LPBYTE(rom + snes2pc(a++)) = 0xFA;
-		// LDA $81XXXX, X
-		*LPBYTE(rom + snes2pc(a++)) = 0xBF;
-		*LPBYTE(rom + snes2pc(a++)) = 0x37;
-		*LPBYTE(rom + snes2pc(a++)) = 0x89;
-		*LPBYTE(rom + snes2pc(a++)) = 0x81;
-		// TAX
-		*LPBYTE(rom + snes2pc(a++)) = 0xAA;
-		// TYA
-		*LPBYTE(rom + snes2pc(a++)) = 0x98;
-
-		eventOffsetLimit = 0x10000;
-
-		//romAddr = 0x110000;
-		// TODO: add other things
-	}
+	
 
 	// <DECOMPRESS>
 	// 1) decompress to the next location
@@ -2604,130 +2228,80 @@ bool SC4Core::ExpandROM() {
 		}
 	}
 	else if (type == 1) {
-		DWORD addr = 0;
-		romAddr = 0x20001D;
-
-		// level stuff
-		for (unsigned i = 0; i < numLevels - 1; i++) {
-			// ???
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8587F1) + ((i + 1) * 2));
-			addrList.push_back({addr, i });
-		}
-		for (unsigned i = 0; i < numLevels; i++) {
-			// ???
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588E1) + ((i + 1) * 2));
-			addrList.push_back({addr, i });
-		}
-		for (unsigned i = 0; i < numLevels; i++) {
-			// ???
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588ED) + ((i + 1) * 2));
-			addrList.push_back({addr, i });
-		}
-		for (unsigned i = 0; i < 7; i++) {
-			// ???
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x85F364) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-		for (unsigned i = 0; i < 15; i++) {
-			// FIXME: 10,14 looks fine, but doesn't decode right
-			if (i == 10 || i == 14) break;
-			// ???
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x858A0D) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		for (unsigned i = 0; i < 3; i++) {
-			// ??? - $1E48 index
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8585CB) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		for (unsigned i = 0; i < 12; i++) {
-			// ??? - D,$3A index
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x859E4A) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		for (unsigned i = 0; i < 7; i++) {
-			// ??? - $1C84 index
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x85A7AF) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		// misc
-		addrList.push_back({0x858527, numLevels });
-		addrList.push_back({0x858530, numLevels });
-		addrList.push_back({0x858539, numLevels });
-		addrList.push_back({0x858542, numLevels });
-		addrList.push_back({0x8587AB, numLevels });
-		addrList.push_back({0x858976, numLevels });
-		addrList.push_back({0x858AD4, numLevels });
-		addrList.push_back({0x858ADD, numLevels });
-		addrList.push_back({0x859FBA, numLevels });
-		addrList.push_back({0x85A84B, numLevels });
-		addrList.push_back({0x85AA1F, numLevels });
-		addrList.push_back({0x85CF2A, numLevels });
-		addrList.push_back({0x85CF33, numLevels });
-		addrList.push_back({0x85CF41, numLevels });
-		addrList.push_back({0x85CFCF, numLevels });
-		addrList.push_back({0x85CFD8, numLevels });
-		addrList.push_back({0x85D01F, numLevels });
-		addrList.push_back({0x85D073, numLevels });
-		addrList.push_back({0x85D07C, numLevels });
-		addrList.push_back({0x85F513, numLevels });
-		addrList.push_back({0x85F55B, numLevels });
+		//	DWORD addr = 0;
+		//	romAddr = 0x20001D;
+		//
+		//	// level stuff
+		//	for (unsigned i = 0; i < numLevels - 1; i++) {
+		//		// ???
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8587F1) + ((i + 1) * 2));
+		//		addrList.push_back({addr, i });
+		//	}
+		//	for (unsigned i = 0; i < numLevels; i++) {
+		//		// ???
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588E1) + ((i + 1) * 2));
+		//		addrList.push_back({addr, i });
+		//	}
+		//	for (unsigned i = 0; i < numLevels; i++) {
+		//		// ???
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588ED) + ((i + 1) * 2));
+		//		addrList.push_back({addr, i });
+		//	}
+		//	for (unsigned i = 0; i < 7; i++) {
+		//		// ???
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x85F364) + (i * 2));
+		//		addrList.push_back({addr, numLevels });
+		//	}
+		//	for (unsigned i = 0; i < 15; i++) {
+		//		// FIXME: 10,14 looks fine, but doesn't decode right
+		//		if (i == 10 || i == 14) break;
+		//		// ???
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x858A0D) + (i * 2));
+		//		addrList.push_back({addr, numLevels });
+		//	}
+		//
+		//	for (unsigned i = 0; i < 3; i++) {
+		//		// ??? - $1E48 index
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8585CB) + (i * 2));
+		//		addrList.push_back({addr, numLevels });
+		//	}
+		//
+		//	for (unsigned i = 0; i < 12; i++) {
+		//		// ??? - D,$3A index
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x859E4A) + (i * 2));
+		//		addrList.push_back({addr, numLevels });
+		//	}
+		//
+		//	for (unsigned i = 0; i < 7; i++) {
+		//		// ??? - $1C84 index
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x85A7AF) + (i * 2));
+		//		addrList.push_back({addr, numLevels });
+		//	}
+		//
+		//	// misc
+		//	addrList.push_back({0x858527, numLevels });
+		//	addrList.push_back({0x858530, numLevels });
+		//	addrList.push_back({0x858539, numLevels });
+		//	addrList.push_back({0x858542, numLevels });
+		//	addrList.push_back({0x8587AB, numLevels });
+		//	addrList.push_back({0x858976, numLevels });
+		//	addrList.push_back({0x858AD4, numLevels });
+		//	addrList.push_back({0x858ADD, numLevels });
+		//	addrList.push_back({0x859FBA, numLevels });
+		//	addrList.push_back({0x85A84B, numLevels });
+		//	addrList.push_back({0x85AA1F, numLevels });
+		//	addrList.push_back({0x85CF2A, numLevels });
+		//	addrList.push_back({0x85CF33, numLevels });
+		//	addrList.push_back({0x85CF41, numLevels });
+		//	addrList.push_back({0x85CFCF, numLevels });
+		//	addrList.push_back({0x85CFD8, numLevels });
+		//	addrList.push_back({0x85D01F, numLevels });
+		//	addrList.push_back({0x85D073, numLevels });
+		//	addrList.push_back({0x85D07C, numLevels });
+		//	addrList.push_back({0x85F513, numLevels });
+		//	addrList.push_back({0x85F55B, numLevels });
 	}
-	else if (type == 2) {
-		DWORD addr = 0;
-		romAddr = 0x20001D;
-
-		for (unsigned i = 0; i < numLevels; i++) {
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81AADA) + (i * 2));
-			addrList.push_back({addr, i });
-		}
-
-		for (unsigned i = 0; i < 0x1B; i++) {
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81AEB8) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		for (unsigned i = 2; i < 0x16; i++) {
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A22A) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		for (unsigned i = 0; i < 0x13; i++) {
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A24C) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		for (unsigned i = 0; i < 0x5; i++) {
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A254) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		for (unsigned i = 0; i < 0xA; i++) {
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A25E) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		for (unsigned i = 0; i < 0x3A; i++) {
-			addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x818937) + (i * 2));
-			addrList.push_back({addr, numLevels });
-		}
-
-		addrList.push_back({0x81839F, numLevels });
-		addrList.push_back({0x818920, numLevels });
-		addrList.push_back({0x8183B2, numLevels });
-		addrList.push_back({0x81A6E6, numLevels });
-		addrList.push_back({0x81840D, numLevels });
-		addrList.push_back({0x818443, numLevels });
-		addrList.push_back({0x818451, numLevels });
-		addrList.push_back({0x8183E6, numLevels });
-		//addrList.push_back({0x8185BE, numLevels });
-		addrList.push_back({0x8185B3, numLevels });
-		addrList.push_back({0x81846D, numLevels });
-	}
+	
 
 	std::map<DWORD, DWORD> addrMap;
 	// combineMap[level][ramAddr] = romAddr
@@ -2747,7 +2321,7 @@ bool SC4Core::ExpandROM() {
 			if (*LPWORD(gfxPtr) != 0xFFFF) {
 				WORD gfx = *LPWORD(gfxPtr) & ~0x0300;
 				// TODO: this check needs to be cleaned up.
-				unsigned addrBytes = (gfx == 0 || gfx == 0xA001 || gfx == 2 || gfx == 3 || (type == 2 && gfx == 0x8001)) ? 2 : 3;
+			unsigned addrBytes = (gfx == 0 || gfx == 0xA001 || gfx == 2 || gfx == 3) ? 2 : 3;
 
 				gfxPtr += 2;
 
@@ -2803,7 +2377,7 @@ bool SC4Core::ExpandROM() {
 							}
 						}
 
-						if (gfx == 0xA001 || (gfx == 0x8001 && type == 2)) {
+						if (gfx == 0xA001) {
 							done = true;
 						}
 						continue;
@@ -2820,7 +2394,7 @@ bool SC4Core::ExpandROM() {
 					unsigned origSize = 0;
 					bool setBase = false;
 
-					if (GetBaseAddr(gfx, dstAddr, baseAddr, newSize) && (l < numLevels || type == 2)) {
+					if (GetBaseAddr(gfx, dstAddr, baseAddr, newSize) && l < numLevels) {
 						baseBuf = (dstAddr - baseAddr) * (addrBytes == 3 ? 1 : 2);
 						dstAddr = baseAddr;
 						// is it ok to always pad regions?
@@ -2901,7 +2475,7 @@ bool SC4Core::ExpandROM() {
 						unsigned snesAddr = SNESCore::pc2snes(romAddr);
 						memcpy(gfxPtr - 3, &snesAddr, 3);
 
-						if (type != 2 && combineAddrList.size() <= 1) {
+						if (combineAddrList.size() <= 1) {
 							addrMap[srcAddr & 0xFFFFFF] = snesAddr & 0xFFFFFF;
 						}
 
@@ -2994,7 +2568,7 @@ bool SC4Core::ExpandROM() {
 						romAddr += newSize;
 					}
 
-					if (gfx == 0xA001 || (gfx == 0x8001 && type == 2)) {
+					if (gfx == 0xA001) {
 						done = true;
 					}
 				}
@@ -3569,7 +3143,7 @@ void SC4Core::LoadLevel(bool refresh)
 {
 	numLevels = type == 0 ? 0x44 : type == 1 ? 0x6 : 0xA;
 	numBlocks = type == 0 ? 0x100 : type == 1 ? 0x200 : 0x80;
-	mapBase = type == 2 ? 0x7000 : 0x4000;
+	mapBase = 0x4000;
 	mapBaseAdder = type == 0 ? 0x0000 : type == 1 ? 0x1000 : 0x0000;
 	numTiles = type == 0 ? 0x200 : type == 1 ? 0x400 : 0x400;
 
@@ -3593,7 +3167,7 @@ void SC4Core::LoadBackground()
 	pLayout     = snes2pc(SReadDWord(p_blayout[type] + pLevel));
 	pScenes     = snes2pc(SReadDWord(p_bscenes[type] + pLevel));
 	pBlocks     = snes2pc(SReadDWord(p_bblocks[type] + pLevel));
-	mapBase = type == 2 ? 0xB000 : 0xA000; // type == 0 ? 0xA000 : type == 1 ? 0x9000 : 0x0;
+	mapBase = 0xA000;
 	mapBaseAdder = type == 0 ? 0x0000 : type == 1 ? 0x1000 : 0x0000;
 	LoadVRAM();
 	LoadTilesAndPalettes();
@@ -3633,6 +3207,8 @@ void SC4Core::LoadTilesAndPalettes()
 		addrList.push_back((0x81 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x86946F + level * 2)));	// palette animation 
 	}
 	else if (type == 0x1) {
+		addrList.push_back(0x8787EE);
+
 		//addrList.push_back(0x8587C3);
 		//addrList.push_back(0x8587E1);
 		//addrList.push_back(0x8587EA);
@@ -3647,20 +3223,14 @@ void SC4Core::LoadTilesAndPalettes()
 		//addrList.push_back(0x85854B);
 
 		//addrList.push_back(0x858412);
-		addrList.push_back(0x858AC7);
-		addrList.push_back((0x85 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x858A21 + *LPBYTE(rom + SNESCore::snes2pc(0x8589CC + (level + 1))))));
+		//addrList.push_back(0x858AC7);
+		//addrList.push_back((0x85 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x858A21 + *LPBYTE(rom + SNESCore::snes2pc(0x8589CC + (level + 1))))));
 
 		// FIXME: 
 		//addrList.push_back((0x85 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x85CD1B + 0 * level * 2)));
 		//addrList.push_back((0x85 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x85CD21 + level * 2)));
 	}
-	else if (type == 0x2) {
-		addrList.push_back(0x818B6E);
-		addrList.push_back(0x818B9D);
-		addrList.push_back(0x818C19);
-		addrList.push_back(0x818BF2);
-		addrList.push_back((0x81 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x81A21A + level * 2)));
-	}
+
 
 	addrList.insert(addrList.end(), dynPalTable.begin(), dynPalTable.end());
 
@@ -3689,6 +3259,33 @@ void SC4Core::LoadTilesAndPalettes()
 
 			}
 		}
+
+		//if (*(rom + SNESCore::snes2pc(addr))) {
+		//	BYTE t = *(rom + SNESCore::snes2pc(addr));
+		//	addr += t == 4 ? 0 : 1;
+		//
+		//	if (t != 1) continue;
+		//
+		//	// weird extra 0.  seems like a countdown timer for loading palette?
+		//	addr += 2;
+		//	while (WORD srcOffset = *LPWORD(rom + SNESCore::snes2pc(addr))) {
+		//		addr += 2;
+		//		WORD dstOffset = *LPWORD(rom + SNESCore::snes2pc(addr));
+		//		addr += 2;
+		//
+		//		unsigned palIndex = (dstOffset - 0x2200) / 2;
+		//		DWORD srcAddr = ((type == 0x0 ? 0x86 : type == 0x1 ? 0x88 : 0x84) << 16) | srcOffset;
+		//		WORD size = *LPWORD(rom + SNESCore::snes2pc(srcAddr)) + 1;
+		//		srcAddr += 2;
+		//		for (int i = palIndex, j = 0; i < palIndex + size / 2; i++, j += 2) {
+		//			palCache[i] = Get16Color(SNESCore::snes2pc(srcAddr) + j);
+		//			palCacheOffset[i] = SNESCore::snes2pc(srcAddr) + j;
+		//		}
+		//
+		//	}
+		//}
+
+
 	}
 
 	//pPalBase = snes2pc(p_palett[type]);
@@ -4037,109 +3634,55 @@ void SC4Core::LoadEvents() {
 		}
 	}
 	else if (type == 1) {
+			
+		
+			if (p_locks[type]) pLocks = snes2pc(p_locks[type]);
+			
 
-		if (level == 1 || level == 3 || level == 4) return;
-
-		DWORD pEvents = snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16));
-		LPBYTE pevent = rom + pEvents;
-		DWORD pEventsLimit = snes2pc(*LPWORD(pevent) | (eventBank << 16));
-		LPBYTE plimitevent = rom + pEventsLimit;
-
-		auto oldpevent = pevent;
-
-		// ABCDEEFFGG
-		// A = 8b = mask
-		// B = 8b = id
-		// C = 8b = max slot >> 4
-		// D = 8b = min slot >> 4
-		// EE = xpos
-		// FF = ypos
-		// GG = subid
-
-		unsigned sceneNum = 0;
-		while (pevent != plimitevent) {
-			DWORD a = snes2pc(*LPWORD(pevent) | (eventBank << 16));
-			LPBYTE pe = rom + a;
-
-			while (*pe != 0xFF) {
+			DWORD pEvents = snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16));
+			LPBYTE pevent = rom + pEvents;
+			auto oldpevent = pevent;
+			
+			//// AABBCC
+			//// A = 14b = xpos | 2b = event tpe
+			//// B = 14b = ypos | 2b = ???
+			//// C = 8b = spawn test index (indexes into 1500 in RAM)
+			while (*LPDWORD(pevent) != 0xFFFFFFFF) {
 				EventInfo event;
+			
+				event.unknown = *LPWORD(pevent + 2) & 0x3;
+				event.type = *LPWORD(pevent + 0) & 0x3;
+				event.xpos = *LPWORD(pevent + 0) & 0xFFC;
+				event.ypos = *LPWORD(pevent + 2) & 0xFFC;
+				event.eventId = *LPWORD(pevent + 4) & 0xFF;
+				event.eventSubId = (*LPWORD(pevent + 4) >> 8) & 0xFF;
 
-				event.match = *LPBYTE(pe + 0);
-				event.eventId = *LPBYTE(pe + 1);
-				event.unknown = *LPWORD(pe + 2);
-				event.xpos = *LPWORD(pe + 4) + sceneNum * 0x100;
-				event.ypos = *LPWORD(pe + 6);
-				event.eventSubId = *LPWORD(pe + 8);
-				pe += 0xA;
+			//	event.match = (*(pevent + 3) >> 4 << 4) | (*(pevent + 1) >> 4);
+			//	event.type = *LPWORD(pevent + 0) & 0x3;
+			//	event.xpos = *LPWORD(pevent + 0) & 0xFFC;
+			//	event.ypos = *LPWORD(pevent + 2) & 0xFFC;
+			//	event.unknown = *LPWORD(pevent + 2) & 0x3;
+			//	event.eventId = *LPWORD(pevent + 4) & 0xFF;
+			//	event.eventSubId = (*LPWORD(pevent + 4) >> 8) & 0xFF;
 
 				eventTable.emplace_back(event);
 
 				// get the next event
+				pevent += 8;
 				totalEvents++;
 			}
-			pevent += 2;
 
-			eventSize = pe - oldpevent;
-			sceneNum++;
-		}
-	}
-	else if (type == 2) {
-		DWORD pEvents = snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16));
-		LPBYTE pevent = rom + pEvents;
-		auto oldpevent = pevent;
+			// include termination
+			eventSize = pevent - oldpevent + 4;
 
-		// AABBCC
-		// A = 14b = xpos | 2b = event tpe
-		// B = 14b = ypos | 2b = ???
-		// C = 8b = spawn test index (indexes into 1500 in RAM)
-		while (*LPWORD(pevent) != 0xFFFF) {
-			EventInfo event;
-
-			//event.match = 0;
-			event.type = *LPWORD(pevent + 2) & 0x3;
-			event.xpos = ((*LPWORD(pevent + 0) & 0xFFC0) >> 3); // -0x28;
-
-			if (event.type == 0 || event.type == 1) {
-				event.ypos = (*LPWORD(pevent + 2) & 0xFC) + ((*LPWORD(pevent + 0) & 0x20) << 3); // ypos
-				event.eventId = *LPWORD(pevent + 3) & 0x7F; // id
-				event.eventSubId = *LPWORD(pevent + 0) & 0x1F; // slot
-				event.unknown = *LPWORD(pevent + 2) & 0x8000;
+			// count total events
+			while (*LPDWORD(pevent + 6) == 0xFFFFFFFF) {
+				totalEvents++;
+				pevent += 6;
 			}
-			else if (event.type == 2) {
-				event.ypos = *LPWORD(pevent + 2) & 0x00FC;
-				event.eventId = *LPWORD(pevent + 3) & 0x007F;
-				event.eventSubId = *LPWORD(pevent + 0) & 0x003F;
-				event.unknown = *LPWORD(pevent + 2) & 0x8000;
-			}
-			else if (event.type == 3) {
-				event.ypos = 0;
-				event.eventId = *LPBYTE(pevent + 0) & 0x3F; // id
-				event.eventSubId = *LPBYTE(pevent + 3) & 0xFF;
-				event.unknown = *LPBYTE(pevent + 2) & 0xFC;
-			}
-
-			////event.spawnIndex = ((*LPWORD(pevent + 2) >> 8) & 0xF0) | ((*LPWORD(pevent + 0) >> 12) & 0x0F);
-			//event.eventId = *LPWORD(pevent + 3) & 0xFF;
-			////event.eventSubId = (*LPWORD(pevent + 4) >> 8) & 0xFF;
-			//event.unknown = *LPWORD(pevent + 0) & 0x3F;
-
-			eventTable.emplace_back(event);
-
-			// get the next event
-			pevent += 4;
-			totalEvents++;
-		}
-
-		// include termination
-		eventSize = pevent - oldpevent + 2;
-
-		// count total events
-		while (*LPWORD(pevent + 2) == 0xFFFF) {
-			totalEvents++;
-			pevent += 2;
-		}
 
 	}
+	
 }
 
 void SC4Core::SortEvents() {
@@ -4168,35 +3711,6 @@ void SC4Core::SlotEvents() {
 		if (type == 0) {
 		}
 		else if (type == 1) {
-
-		}
-		else if (type == 2) {
-			if (e.type == 0) {
-				//if (e.eventId == 0x1C) {
-				//	currentSlot = 0;
-				//	e.eventSubId = currentSlot;
-				//	currentSlot += 0x8;
-				//}
-				//else {
-					// single enemy
-					e.eventSubId = currentSlot;
-					currentSlot++;
-				//}
-			}
-			else if (e.type == 1) {
-				// reset the slot with some space for the special type
-				currentSlot = 8;
-			}
-			else if (e.type == 2) {
-				// multiple spawn
-				unsigned slotsRequired = max(1, *LPBYTE(rom + snes2pc(0x81AF8A + 4 * (e.eventId - 1) + 3)));
-				//if (currentSlot + slotsRequired > 0x1A)
-				//	currentSlot = 0;
-				e.eventSubId = currentSlot;
-				currentSlot += slotsRequired;
-			}
-
-			currentSlot %= 0x1A;
 		}
 	}
 }
@@ -4269,50 +3783,7 @@ void SC4Core::LoadVRAM() {
 			addrList.push_back(addr);
 		}
 	}
-	else if (type == 0x2) {
-		DWORD addr;
 
-		// ship and other tiles
-		//addrList.push_back(0x8185B3);
-		addrList.push_back(0x81846D);
-		addrList.push_back(0x81840D);
-
-		// dynamic tiles
-		addrList.push_back(0x8183B2);
-
-		// standard enemies
-		addrList.push_back(0x8183E6);
-
-		// X (0)
-		addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81AADA) + (level * 2));
-		addrList.push_back(addr);
-
-		// not loaded on level 0
-		//addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81AEB8) + (level * 2));
-		//addrList.push_back(addr);
-
-		//addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A22A) + (level * 2));
-		//addrList.push_back(addr);
-
-		// X (2)
-		addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A24C) + ((level+1) * 2));
-		addrList.push_back(addr);
-
-		// X (2)
-		addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A254) + ((level+1) * 2));
-		addrList.push_back(addr);
-
-		// X (0)
-		addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x81A25E) + (level * 2));
-		addrList.push_back(addr);
-
-		//addr = 0x81 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x818937) + (level * 2));
-		//addrList.push_back(addr);
-		// G3
-
-		// Ship and other sprites in VRAM
-
-	}
 
 	// add dynamic tiles
 	addrList.insert(addrList.end(), dynDecTable.begin(), dynDecTable.end());
@@ -4329,7 +3800,7 @@ void SC4Core::LoadVRAM() {
 			LPBYTE gfxPtr = (rom + SNESCore::snes2pc(addr));
 
 			if (*LPWORD(gfxPtr) != 0xFFFF) {
-				bool oneAddr = *gfxPtr == 2 || (type == 2 && a == 0x81840D);
+				bool oneAddr = *gfxPtr == 2;
 				unsigned addrBytes = (*gfxPtr == 0 || *gfxPtr == 2 || *gfxPtr == 3) ? 2 : 3;
 				//if (*gfxPtr == 7) return;
 				gfxPtr += 2;
@@ -4434,10 +3905,10 @@ void SC4Core::LoadPaletteDynamic()
 				return;
 			}
 
-			palettesOffset[writeTo >> 4] = snes2pc(colorPointer | (type == 2 ? 0x8C0000 : 0x850000));
+			palettesOffset[writeTo >> 4] = snes2pc(colorPointer | 0x850000);
 			for (int i = 0; i < 0x10; i++)
 			{
-				palCache[writeTo + i] = Convert16Color(ReadWord(snes2pc((type == 2 ? 0x8C0000 : 0x850000) | colorPointer + i * 2)));
+				palCache[writeTo + i] = Convert16Color(ReadWord(snes2pc(0x850000 | colorPointer + i * 2)));
 			}
 			mainIndex += 3;
 		}
@@ -4581,12 +4052,6 @@ RECT SC4Core::GetBoundingBox(const EventInfo &event) {
 		rect.top = event.ypos - 8;
 		rect.bottom = event.ypos + 8;
 		rect.right = event.xpos + 8;
-	}
-	else if (type == 2) {
-		rect.left = event.xpos - 0x18;
-		rect.top = event.ypos - 0x18;
-		rect.bottom = event.ypos + 0x18;
-		rect.right = event.xpos + 0x18;
 	}
 	//}
 
