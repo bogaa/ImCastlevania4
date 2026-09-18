@@ -133,7 +133,7 @@ const long p_spriteOffset[2] = { NULL, NULL };
 const long p_objOffset[2] = { NULL, NULL };
 const long p_gfxobj[2] = { NULL, NULL };	// enemy
 const long p_gfxpal[2] = { NULL, NULL };
-//const long p_capsulepos[2] = { NULL, NULL, NULL };
+//const long p_capsulepos[3] = { NULL, NULL, NULL };
 
 const long p_blayout[2] = { NULL, NULL };
 const long p_bscenes[2] = { NULL, NULL };
@@ -3207,9 +3207,10 @@ void SC4Core::LoadTilesAndPalettes()
 		addrList.push_back((0x81 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x86946F + level * 2)));	// palette animation 
 	}
 	else if (type == 0x1) {
-	//	addrList.push_back(0x8787EE);		// first level. TODO HUD ENEMY 
+	//	addrList.push_back(0x8787EE);		// first level. TODO HUD ENEMY PALETTES 
 		addrList.push_back((0x87 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x81A478 + level * 2)));	// tile palette
 
+		
 		// CONTRA.. 
 		//addrList.push_back((0x85 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x858A21 + *LPBYTE(rom + SNESCore::snes2pc(0x8589CC + (level + 1))))));
 
@@ -3759,40 +3760,45 @@ void SC4Core::LoadVRAM() {
 	}
 	else if (type == 0x1) {
 		DWORD addr;
-		//// C3
-		//// ???
-		//addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8587F1) + ((level + 1) * 2));
-		//addrList.push_back(addr);
-		// wram - player tiles
-		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588E1) + ((level + 1) * 2));
+		// BG0/1 tiles
+		addrList.push_back((0x82 << 16) | *LPWORD(rom + SNESCore::snes2pc(0x81A519 + level * 2)));	// tile palette
 		addrList.push_back(addr);
-		// wram - level
-		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588ED) + ((level + 1) * 2));
-		addrList.push_back(addr);
-
-		addrList.push_back(0x858ADD);
-		addrList.push_back(0x858AD4);
-		// tiles
-		if (level == 1) {
-
-		}
-		else if (level == 4) {
-			addrList.push_back(0x85CF33);
-			addrList.push_back(0x85D01F);
-		}
-		else {
-			auto index = level;
-			switch (level) {
-			case 0: index = 0; break;
-			case 1: index = 0; break;
-			case 2: index = 2; break;
-			case 3: index = 4; break;
-			case 4: index = 0; break;
-			case 5: index = 6; break;
-			}
-			addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x858A0D) + index);
-			addrList.push_back(addr);
-		}
+		
+		//	DWORD addr;
+		//	//// C3
+			//// ???
+			//addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8587F1) + ((level + 1) * 2));
+			//addrList.push_back(addr);
+			// wram - player tiles
+		//	addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588E1) + ((level + 1) * 2));
+		//	addrList.push_back(addr);
+		//	// wram - level
+		//	addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x8588ED) + ((level + 1) * 2));
+		//	addrList.push_back(addr);
+		//
+		//	addrList.push_back(0x858ADD);
+		//	addrList.push_back(0x858AD4);
+		//	// tiles
+		//	if (level == 1) {
+		//
+		//	}
+		//	else if (level == 4) {
+		//		addrList.push_back(0x85CF33);
+		//		addrList.push_back(0x85D01F);
+		//	}
+		//	else {
+		//		auto index = level;
+		//		switch (level) {
+		//		case 0: index = 0; break;
+		//		case 1: index = 0; break;
+		//		case 2: index = 2; break;
+		//		case 3: index = 4; break;
+		//		case 4: index = 0; break;
+		//		case 5: index = 6; break;
+		//		}
+		//		addr = 0x85 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x858A0D) + index);
+		//		addrList.push_back(addr);
+		//	}
 	}
 
 

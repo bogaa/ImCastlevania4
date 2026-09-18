@@ -45,7 +45,9 @@ struct EditorState {
     int activeToolTab = 0;
     int activeEventPaletteTab = 0;
     int activeSpriteTab = 0;
+//    int activeMusicTab = 0;
     bool restoreToolTab = true;
     bool restoreEventPaletteTab = true;
     bool restoreSpriteTab = true;
+//    bool restoreMusicTab = true;
 };

@@ -2513,7 +2513,7 @@ static void DrawTools(EditorState& state, HWND hwnd, ID3D11Device* device, const
         const auto toolFlags = [&](int index) {
             return state.restoreToolTab && restoredToolTab == index ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         };
-        if (ImGui::BeginTabItem("Edit Events", nullptr, toolFlags(0))) {
+        if (ImGui::BeginTabItem("Events", nullptr, toolFlags(0))) {
             if (!state.restoreToolTab || restoredToolTab == 0) {
                 state.activeToolTab = 0;
                 state.restoreToolTab = false;
@@ -2585,7 +2585,7 @@ static void DrawTools(EditorState& state, HWND hwnd, ID3D11Device* device, const
             }
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Draw Tiles", nullptr, toolFlags(1))) {
+        if (ImGui::BeginTabItem("Draw Scene", nullptr, toolFlags(1))) {
             if (!state.restoreToolTab || restoredToolTab == 1) {
                 state.activeToolTab = 1;
                 state.restoreToolTab = false;
@@ -2621,7 +2621,7 @@ static void DrawTools(EditorState& state, HWND hwnd, ID3D11Device* device, const
             }
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Edit Blocks", nullptr, toolFlags(2))) {
+        if (ImGui::BeginTabItem("Tile32", nullptr, toolFlags(2))) {
             if (!state.restoreToolTab || restoredToolTab == 2) {
                 state.activeToolTab = 2;
                 state.restoreToolTab = false;
@@ -2630,7 +2630,7 @@ static void DrawTools(EditorState& state, HWND hwnd, ID3D11Device* device, const
             state.levelRenderer.DrawBlockEditor(state);
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Tile Behavior", nullptr, toolFlags(3))) {
+        if (ImGui::BeginTabItem("Collusion", nullptr, toolFlags(3))) {
             if (!state.restoreToolTab || restoredToolTab == 3) {
                 state.activeToolTab = 3;
                 state.restoreToolTab = false;
@@ -2648,7 +2648,7 @@ static void DrawTools(EditorState& state, HWND hwnd, ID3D11Device* device, const
             DrawHudEditor(state);
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Edit Sprites", nullptr, toolFlags(5))) {
+        if (ImGui::BeginTabItem("Sprites", nullptr, toolFlags(5))) {
             if (!state.restoreToolTab || restoredToolTab == 5) {
                 state.activeToolTab = 5;
                 state.restoreToolTab = false;
@@ -2668,7 +2668,7 @@ static void DrawTools(EditorState& state, HWND hwnd, ID3D11Device* device, const
         } else {
             ProcessScratchDrops(device, droppedFiles);
         }
-        if (ImGui::BeginTabItem("Edit Music", nullptr, toolFlags(7))) {
+        if (ImGui::BeginTabItem("Music", nullptr, toolFlags(7))) {
             if (!state.restoreToolTab || restoredToolTab == 7) {
                 state.activeToolTab = 7;
                 state.restoreToolTab = false;
@@ -2677,7 +2677,7 @@ static void DrawTools(EditorState& state, HWND hwnd, ID3D11Device* device, const
             DrawMusicEditor(state, hwnd, musicLog);
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Edit Instruments", nullptr, toolFlags(8))) {
+        if (ImGui::BeginTabItem("Instruments", nullptr, toolFlags(8))) {
             if (!state.restoreToolTab || restoredToolTab == 8) {
                 state.activeToolTab = 8;
                 state.restoreToolTab = false;

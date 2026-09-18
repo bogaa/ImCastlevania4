@@ -17,34 +17,35 @@
 #include <set>
 #include <utility>
 
+
 namespace {
 
-static bool CanReadRom(const SC4Core& core, unsigned pcOffset, unsigned bytes)
+    static bool CanReadRom(const SC4Core& core, unsigned pcOffset, unsigned bytes)
 {
     return core.rom && pcOffset <= core.romSize && bytes <= core.romSize - pcOffset;
 }
-
-static unsigned ReadByteAt(const SC4Core& core, unsigned snesAddress)
+    
+    static unsigned ReadByteAt(const SC4Core& core, unsigned snesAddress)
 {
     const unsigned pcOffset = SNESCore::snes2pc(static_cast<int>(snesAddress));
     return CanReadRom(core, pcOffset, 1) ? core.rom[pcOffset] : 0;
 }
-
-static unsigned ReadWordAt(const SC4Core& core, unsigned snesAddress)
+    
+    static unsigned ReadWordAt(const SC4Core& core, unsigned snesAddress)
 {
     const unsigned pcOffset = SNESCore::snes2pc(static_cast<int>(snesAddress));
     return CanReadRom(core, pcOffset, 2) ? *reinterpret_cast<const WORD*>(core.rom + pcOffset) : 0;
 }
-
-static float ClampSafe(float value, float low, float high)
+    
+    static float ClampSafe(float value, float low, float high)
 {
     if (high < low) {
         return low;
     }
     return std::clamp(value, low, high);
 }
-
-static unsigned EventAssemblyOffset(const EventInfo& event)
+    
+    static unsigned EventAssemblyOffset(const EventInfo& event)
 {
     switch (event.eventId & 0xFF) {
     case 0x01: return 0x9061;
@@ -106,7 +107,7 @@ static unsigned EventAssemblyOffset(const EventInfo& event)
     case 0x61: return 0xA85B;
     case 0x62: return 0xA84A;
     case 0x64: return 0xA869;
-    case 0x66: return 0xE07C;
+    case 0x66: return 0;   // 0xE07C no slot entery? 0x6A00 default? 
     case 0x69: return 0x9470;
     case 0x6B: return 0x8D50;
     case 0x6C: return 0xA87F;
@@ -125,7 +126,7 @@ static unsigned EventAssemblyOffset(const EventInfo& event)
     case 0x7B: return 0x8B66;
     case 0x7E: return 0x95EB;
     case 0x7F: return 0x9B59;
-    default: break;
+    default: return 0;
     }
 
     if (event.eventId == 0x06) {
@@ -134,7 +135,7 @@ static unsigned EventAssemblyOffset(const EventInfo& event)
         case 0x01: return 0xA7F0;
         case 0x02: return 0xA7F9;
         case 0x03: return 0xA5A5;
-        default:  break;
+        default: return 0;
         }
     }
     
@@ -143,7 +144,7 @@ static unsigned EventAssemblyOffset(const EventInfo& event)
         case 0x00: return 0xA507;
         case 0x01:
         case 0x02: return 0xE1E4;
-        default:  break;
+        default: return 0;
         }
     }
     
@@ -161,7 +162,7 @@ static unsigned EventAssemblyOffset(const EventInfo& event)
         case 0x09: return 0x8D61;
         case 0x0a: return 0xE07C;
         case 0x0b: return 0x968B;
-        default:  break;
+        default: return 0;
         }
     }
     
@@ -182,8 +183,8 @@ static unsigned EventAssemblyOffset(const EventInfo& event)
     }
     return 0;
 }
-
-static bool TryGetSpriteSlotOffset(const SC4Core& core, const EventInfo& event, unsigned& slotOffset)
+    
+    static bool TryGetSpriteSlotOffset(const SC4Core& core, const EventInfo& event, unsigned& slotOffset)
 {
     slotOffset = 0;
     if (event.eventId == 0 || event.type == EVENT_TYPE_CANDLE) {
@@ -212,15 +213,15 @@ static bool TryGetSpriteSlotOffset(const SC4Core& core, const EventInfo& event, 
     }
     return false;
 }
-
-static unsigned SpriteSlotOffset(const SC4Core& core, const EventInfo& event)
+    
+    static unsigned SpriteSlotOffset(const SC4Core& core, const EventInfo& event)
 {
     unsigned slotOffset = 0;
     TryGetSpriteSlotOffset(core, event, slotOffset);
     return slotOffset;
 }
-
-static ImU32 EventPlaceholderColor(const EventInfo& event)
+    
+    static ImU32 EventPlaceholderColor(const EventInfo& event)
 {
     switch (event.type) {
     case EVENT_TYPE_ENEMY: return IM_COL32(0, 0, 255, 235);
@@ -229,8 +230,8 @@ static ImU32 EventPlaceholderColor(const EventInfo& event)
     default: return IM_COL32(0, 255, 255, 235);
     }
 }
-
-static void DrawEventPlaceholder(ImDrawList* drawList, ImVec2 min, ImVec2 max, const EventInfo& event)
+    
+    static void DrawEventPlaceholder(ImDrawList* drawList, ImVec2 min, ImVec2 max, const EventInfo& event)
 {
     const ImVec2 center((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
     drawList->AddRect(
@@ -242,8 +243,8 @@ static void DrawEventPlaceholder(ImDrawList* drawList, ImVec2 min, ImVec2 max, c
         2.0f);
     drawList->AddRect(min, max, IM_COL32(92, 92, 102, 255));
 }
-
-static void WriteExpandedRamToRom(SC4Core& core, unsigned ramOffset, unsigned size)
+    
+    static void WriteExpandedRamToRom(SC4Core& core, unsigned ramOffset, unsigned size)
 {
     if (!core.expandedROM || !core.expandedOffset.count(core.level)) {
         return;
@@ -260,16 +261,16 @@ static void WriteExpandedRamToRom(SC4Core& core, unsigned ramOffset, unsigned si
         }
     }
 }
-
-static DWORD ColorToDibPixel(uint16_t color)
+    
+    static DWORD ColorToDibPixel(uint16_t color)
 {
     const DWORD r = ((color >> 10) & 0x1F) * 255 / 31;
     const DWORD g = ((color >> 5) & 0x1F) * 255 / 31;
     const DWORD b = (color & 0x1F) * 255 / 31;
     return (r << 16) | (g << 8) | b;
 }
-
-static HGLOBAL CreateClipboardDib(const std::vector<DWORD>& pixels, int width, int height)
+    
+    static HGLOBAL CreateClipboardDib(const std::vector<DWORD>& pixels, int width, int height)
 {
     if (pixels.empty() || width <= 0 || height <= 0) {
         return nullptr;
@@ -306,8 +307,8 @@ static HGLOBAL CreateClipboardDib(const std::vector<DWORD>& pixels, int width, i
     GlobalUnlock(dibHandle);
     return dibHandle;
 }
-
-static bool CopyPixelsToClipboard(HWND hwnd, const std::vector<DWORD>& pixels, int width, int height)
+    
+    static bool CopyPixelsToClipboard(HWND hwnd, const std::vector<DWORD>& pixels, int width, int height)
 {
     if (pixels.empty() || width <= 0 || height <= 0) {
         return false;
@@ -333,8 +334,8 @@ static bool CopyPixelsToClipboard(HWND hwnd, const std::vector<DWORD>& pixels, i
     CloseClipboard();
     return true;
 }
-
-static HBITMAP CreateBitmapFromClipboardDib(HGLOBAL dibHandle)
+    
+    static HBITMAP CreateBitmapFromClipboardDib(HGLOBAL dibHandle)
 {
     if (!dibHandle) {
         return nullptr;
@@ -368,8 +369,8 @@ static HBITMAP CreateBitmapFromClipboardDib(HGLOBAL dibHandle)
     GlobalUnlock(dibHandle);
     return bitmap;
 }
-
-static HBITMAP GetClipboardBitmap(bool& owned)
+    
+    static HBITMAP GetClipboardBitmap(bool& owned)
 {
     owned = false;
     if (IsClipboardFormatAvailable(CF_BITMAP)) {
@@ -381,8 +382,8 @@ static HBITMAP GetClipboardBitmap(bool& owned)
     }
     return nullptr;
 }
-
-static bool ReadClipboardPixels(HWND hwnd, std::vector<COLORREF>& pixels, int& width, int& height)
+    
+    static bool ReadClipboardPixels(HWND hwnd, std::vector<COLORREF>& pixels, int& width, int& height)
 {
     pixels.clear();
     width = 0;
@@ -440,7 +441,9 @@ static bool ReadClipboardPixels(HWND hwnd, std::vector<COLORREF>& pixels, int& w
     return true;
 }
 
-}
+}   // end namespace
+
+
 
 LevelRenderer::~LevelRenderer()
 {

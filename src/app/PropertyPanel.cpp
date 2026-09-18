@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+
 namespace {
 
     struct PropertyUiState {
@@ -35,8 +36,8 @@ namespace {
     // data tables level
     static constexpr unsigned LEVEL_TYPE = 0x868296;
     static constexpr unsigned LEVEL_BG_MOD = 0x85C736;
-    static constexpr unsigned LEVEL_BG_PROPERTY_MASK_BASE = 0x85C7BE;   
-    static constexpr unsigned LEVEL_BG_SCROLL_BASE = 0x85C846;         
+    static constexpr unsigned LEVEL_BG_PROPERTY_MASK_BASE = 0x85C7BE;
+    static constexpr unsigned LEVEL_BG_SCROLL_BASE = 0x85C846;
     static constexpr unsigned LEVEL_TILE1_ANIMATION_POINTER_BASE = 0x85CA82;
     static constexpr unsigned LEVEL_TILE2_ANIMATION_POINTER_BASE = 0x85cb0a;
     static constexpr unsigned LEVEL_PALETTE_ANIMATION_POINTER_BASE = 0x86946f;
@@ -47,14 +48,20 @@ namespace {
     static constexpr unsigned LEVEL_LOAD_DIRECTION = 0x80D8A3;
 
     // data tables event   
-    static constexpr unsigned SUBWEAPON_DAMAGE_BASE = 0x81A6F8; 
+    static constexpr unsigned SUBWEAPON_DAMAGE_BASE = 0x81A6F8;
     static constexpr unsigned EVENT_BREAKABLE_WALL_ITEM_BASE = 0x81A81A;
-    static constexpr unsigned EVENT_HITBOX_BASE = 0x81ab00;
-    static constexpr unsigned EVENT_HEALTH_BASE = 0x81ac00;
-    static constexpr unsigned EVENT_HIT_ATTRIBUTE_BASE = 0x81ad00; // 01 hurt, 04 whip hitable, 08 collect able also needs bit 01 set, 10 ??, 20 ??, 40 rossery, 80 noDespawn 
-    static constexpr unsigned EVENT_DEATH_ANIMATION_BASE = 0x81ae00;
-    static constexpr unsigned EVENT_DEATH_MOVBITS_BASE = 0x81ae80;
+    static constexpr unsigned EVENT_HITBOX_BASE = 0x81AB00;
+    static constexpr unsigned EVENT_HEALTH_BASE = 0x81AC00;
+    static constexpr unsigned EVENT_HIT_ATTRIBUTE_BASE = 0x81AD00;  // 01 hurt, 04 whip hitable, 08 collect able also needs bit 01 set, 10 ??, 20 ??, 40 rossery, 80 noDespawn 
+    static constexpr unsigned EVENT_DEATH_ANIMATION_BASE = 0x81AE00;
+    static constexpr unsigned EVENT_DEATH_MOVBITS_BASE = 0x81AE80;
     static constexpr unsigned EVENT_DAMAGE_BASE = 0x81af00;
+
+    // expansion 
+    static constexpr unsigned EXP_LEVEL_TRANSIT = 0xA0C000;         // AA BB    AA = level BB = checkpoint. 8 Enteries
+    static constexpr unsigned EXP_EV15_Exit = 0xA68000;             // AB CC    A = Type, B = transitionID CC = CMP pos. 0x3F Entries  
+
+
     
     // routines
     // static constexpr unsigned TRIPLE_SHOT_PICKUP_JML = 0x80DFA3;
@@ -656,8 +663,7 @@ namespace {
         }
     }
 
-//struct KnifePickupModeLocation {
-
+    //struct KnifePickupModeLocation {
 
     static void DrawSelectedEventProperties(EditorState& state)
     {
@@ -853,24 +859,23 @@ namespace {
                     static const std::vector<std::string> exitTypes = { "Init (DONT USE)", "Stairs Up", "Stairs Down", "Left", "Right" };
                     static const std::vector<std::string> exitChecks = NumberItems(0x40);
 
-                    ImGui::TextDisabled("Exit Event Editor");
-                    ImGui::Separator();
-
+                    // Set exit entery to the subID that is selected.
+                    g_propertyState.exitCheck = (static_cast<int>(event->eventSubId) & 0x3F);
+                    bool disabled = true;
+                    ImGui::BeginDisabled(disabled);
                     ComboRow("Exit SubID", g_propertyState.exitCheck, exitChecks);
-                    const unsigned exitBase = 0xA68000 + 0x40 * 0x4 * static_cast<unsigned>(state.level) + 0x4 * static_cast<unsigned>(g_propertyState.exitCheck);
-                    DrawComboProperty(state, "Exit type", g_propertyState.exitType, exitTypes, 1, { exitBase + 0x0 }, expanded);
-                    //DrawNumberProperty(state, "Exit type value", 1, { exitBase + 0x0 }, expanded);
+                    const unsigned exitBase = EXP_EV15_Exit + 0x40 * 0x4 * static_cast<unsigned>(state.level) + 0x4 * static_cast<unsigned>(g_propertyState.exitCheck);
+                    ImGui::EndDisabled();
+
+                    DrawComboProperty(state, "Exit type", g_propertyState.exitType, exitTypes, 1, { exitBase + 0x0 }, expanded);   // DrawNumberProperty(state, "Exit type value", 1, { exitBase + 0x0 }, expanded);                  
                     DrawNumberProperty(state, "Exit cmp value X or Y", 2, { exitBase + 0x2 }, expanded);
-                    DrawNumberProperty(state, "Transit num for transit", 1, { exitBase + 0x1 }, expanded);
+                    DrawNumberProperty(state, "Transition Selector", 1, { exitBase + 0x1 }, expanded);
 
-                    ImGui::TextDisabled("Level Transit Editor");
-                    ImGui::Separator();
-
-                    ComboRow("Next level checkpoint", g_propertyState.nextLevelDirection, entrances);
-                    const unsigned transitionBase = 0xA0C000 + 0x10 * static_cast<unsigned>(state.level) + 0x2 * static_cast<unsigned>(g_propertyState.nextLevelDirection);
-                    DrawNumberProperty(state, "Transit num of event", 1, { transitionBase + 0x1 }, expanded);
-                    DrawNumberProperty(state, "Next level", 1, { transitionBase + 0x0 }, expanded);
-
+                    ImGui::Separator();     // ImGui::TextDisabled("Level Transit Editor");  Not needed info for end users. 
+                    const unsigned transitionBase = EXP_LEVEL_TRANSIT + 0x10 * static_cast<unsigned>(state.level) + 0x2 * static_cast<unsigned>(g_propertyState.nextLevelDirection);
+                    ComboRow("Transition", g_propertyState.nextLevelDirection, entrances);     // select yourself
+                    DrawNumberProperty(state, "Next Level", 1, { transitionBase + 0x0 }, expanded);
+                    DrawNumberProperty(state, "Next Checkpoint", 1, { transitionBase + 0x1 }, expanded);
                 }
             }
 
@@ -893,7 +898,9 @@ namespace {
                     DrawNumberProperty(state, "Lock store addr", 2, { lockBase + 0xA }, expanded);
                 }
             }
-			ImGui::EndDisabled(); // end expanded ROM check
+			
+            
+            ImGui::EndDisabled(); // end expanded ROM check
 
             if (ImGui::CollapsingHeader("Event Properties", ImGuiTreeNodeFlags_DefaultOpen)) {
     
@@ -964,17 +971,16 @@ namespace {
     {
         if (ImGui::CollapsingHeader("Level", ImGuiTreeNodeFlags_DefaultOpen)) {
             const unsigned deathBase = state.session.Region() == 0 ? 0x81B395 : 0x81B369;
-
-            DrawNumberProperty(state, "Death level", 1, { LevelAddress(deathBase, state) });
-            
             DrawNumberProperty(state, "Continue level", 1, { LevelAddress(LEVEL_CONTINUE, state) });
             DrawNumberProperty(state, "Music", 1, { LevelAddress(LEVEL_MUSIK, state) });
             DrawNumberProperty(state, "Timer", 2, { LevelAddress(LEVEL_TIMER, state, 2) });    // FIXME This is already decimal in the rom 
             DrawNumberProperty(state, "Enemy Damage Buff", 1, { LevelAddress(LEVEL_DAMAGE_BUFF, state, 1) });            
-            DrawNumberProperty(state, "TYPE", 2, { LevelAddress(LEVEL_TYPE, state, 2) });
+            DrawNumberProperty(state, "Level Type", 2, { LevelAddress(LEVEL_TYPE, state, 2) });
             DrawNumberProperty(state, "Layer Transperent Mask", 2, { LevelAddress(LEVEL_BG_PROPERTY_MASK_BASE, state, 2) });
             DrawFlaggedWordProperty(state, "Layer Scroll Modes", "Layer behavior flag", { LevelAddress(LEVEL_BG_SCROLL_BASE, state, 2) }, 0x8000);
             DrawNumberProperty(state, "Event direction", 1, { LevelAddress(LEVEL_LOAD_DIRECTION, state) });
+           //reused or not properly implemented stuff..
+           //DrawNumberProperty(state, "Death level", 1, { LevelAddress(deathBase, state) }); // unexpanded death level??
            //DrawNumberProperty(state, "BG animation 0", 2, { LevelAddress(0x85CA82, state, 2) });
            //DrawNumberProperty(state, "BG animation 1", 2, { LevelAddress(0x85CB0A, state, 2) });
            //DrawNumberProperty(state, "Palette animation", 2, { LevelAddress(0x86946F, state, 2) });
@@ -1004,24 +1010,29 @@ namespace {
     
             ComboRow("Checkpoint", g_propertyState.checkpoint, entrances);
             const unsigned entranceBase = 0xA78000 + 0x100 * static_cast<unsigned>(state.level) + 0x20 * static_cast<unsigned>(g_propertyState.checkpoint);
+            DrawNumberProperty(state, "Death level", 1, { entranceBase + 0x1 }, expanded);
             DrawNumberProperty(state, "State0", 1, { entranceBase + 0x0 }, expanded);
             DrawNumberProperty(state, "State1", 2, { entranceBase + 0xE }, expanded);
             DrawNumberProperty(state, "X pos", 2, { entranceBase + 0x2 }, expanded);
             DrawNumberProperty(state, "Y pos", 2, { entranceBase + 0x4 }, expanded);
-            DrawNumberProperty(state, "Cam0 X", 2, { entranceBase + 0x6 }, expanded);
-            DrawNumberProperty(state, "Cam0 Y", 2, { entranceBase + 0x8 }, expanded);
-            DrawNumberProperty(state, "Cam1 X", 2, { entranceBase + 0xA }, expanded);
-            DrawNumberProperty(state, "Cam1 Y", 2, { entranceBase + 0xC }, expanded);
+            ImGui::Separator();        
             DrawNumberProperty(state, "Camera left", 2, { entranceBase + 0x12 }, expanded);
             DrawNumberProperty(state, "Camera right", 2, { entranceBase + 0x14 }, expanded);
             DrawNumberProperty(state, "Camera top", 2, { entranceBase + 0x16 }, expanded);
             DrawNumberProperty(state, "Camera bottom", 2, { entranceBase + 0x18 }, expanded);
+            ImGui::Separator();
+            DrawNumberProperty(state, "Cam0 X", 2, { entranceBase + 0x6 }, expanded);
+            DrawNumberProperty(state, "Cam0 Y", 2, { entranceBase + 0x8 }, expanded);
+            DrawNumberProperty(state, "Cam1 X", 2, { entranceBase + 0xA }, expanded);
+            DrawNumberProperty(state, "Cam1 Y", 2, { entranceBase + 0xC }, expanded);
+            ImGui::Separator();
             DrawNumberProperty(state, "Camera speed X", 2, { entranceBase + 0x1A }, expanded);
             DrawNumberProperty(state, "Camera speed Y", 2, { entranceBase + 0x1C }, expanded);
+            ImGui::Separator();
             DrawNumberProperty(state, "Camera pointer", 2, { entranceBase + 0x1E }, expanded);
             ImGui::Separator();
     
-            DrawNumberProperty(state, "Death level", 1, { entranceBase + 0x1 }, expanded);
+
     
     
             ImGui::Spacing();

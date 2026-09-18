@@ -1152,10 +1152,42 @@ void DrawPianoRoll(Song& song, int& selected, std::set<int>& selectedNotes, int&
 
 } // namespace
 
+
+/*
+// Try to do tabs for music and instrument
+SC4Core& core = state.session.Core();
+ImGui::BeginTabBar("Music-Editor-Tabs")) {
+    
+    const int restoredMusicTab = state.activeMusicTab;
+    const ImGuiTabItemFlags musicFlags = state.restoreMusicTab && restoredMusicTab == 0
+        ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+    const ImGuiTabItemFlags instrumentFlags = state.restoreMusicTab && restoredMusicTab == 1
+        ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+
+    if (ImGui::BeginTabItem("Music", nullptr, globalFlags)) {
+        if (!state.restoreMusicTab || restoredMusicTab == 0) {
+
+
+
+        }
+
+        ImGui::EndTabItem();
+    }
+    if (ImGui::BeginTabItem("Instrument", nullptr, levelFlags)) {
+        if (!state.restoreMusicTab || restoredMusicTab == 1) {
+
+
+
+        }
+
+        ImGui::EndTabItem();
+    }
+*/
+
 void ResetMusicEditor() { g = {}; }
 
 void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
-    if (!state.session.IsLoaded()) { ImGui::TextDisabled("Load a ROM to edit music."); return; }
+    if (!state.session.IsLoaded()) { ImGui::TextUnformatted("Load a ROM to edit music."); return; }
     SC4Core& core = state.session.Core();
     if (g.rom != core.rom) { g = {}; g.rom = core.rom; LoadSong(core, g.songId, g.song); }
     ImGui::SetNextItemWidth(90);
