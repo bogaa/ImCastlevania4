@@ -165,6 +165,33 @@ namespace {
         ImGui::EndDisabled();
     }
 
+    static void DrawNumberPropertySlider(EditorState& state, const char* label, int byteCount, const std::vector<unsigned>& addresses, int minValue, int maxValue, bool enabled = true)
+    {
+        RomSession& session = state.session;
+        const bool canEdit = session.IsLoaded() && enabled && !addresses.empty() && addresses.front() != 0;
+        int value = canEdit ? static_cast<int>(session.ReadRom(addresses.front(), byteCount)) : minValue;
+        value = std::clamp(value, minValue, maxValue);
+
+        ImGui::BeginDisabled(!canEdit);
+        const float valueWidth = byteCount == 1 ? 64.0f : byteCount == 2 ? 88.0f : 112.0f;
+        BeginPropertyRow(label, valueWidth);
+
+        if (ImGui::SliderInt("##value", &value, minValue, maxValue)) {
+            const unsigned mask = byteCount == 1 ? 0xFFu : byteCount == 2 ? 0xFFFFu : 0xFFFFFFFFu;
+            session.WriteRomAll(addresses, byteCount, static_cast<unsigned>(value) & mask);
+            state.levelRenderer.Invalidate();
+        }
+        if (ImGui::IsItemHovered() && !addresses.empty()) {
+            if (addresses.size() == 1) {
+                ImGui::SetTooltip("ROM address: %06X", addresses.front());
+            } else {
+                ImGui::SetTooltip("Writes %zu mirrored ROM addresses", addresses.size());
+            }
+        }
+        EndPropertyRow();
+        ImGui::EndDisabled();
+    }
+
     static void DrawBitfieldWordProperty(EditorState& state, const char* label, const std::vector<unsigned>& addresses, bool enabled = true)
     {
         RomSession& session = state.session;
@@ -1002,13 +1029,14 @@ namespace {
     //        static const std::vector<std::string> exitTypes = { "Init (DONT USE)", "Stairs Up", "Stairs Down", "Left", "Right" };
     //        static const std::vector<std::string> cameraLocks = NumberItems(0x20);
     //        static const std::vector<std::string> exitChecks = NumberItems(0x40);
-    
             ImGui::BeginDisabled(!expanded);
             ImGui::Separator();
             ImGui::TextDisabled("Entrance property for each checkpoint");
             ImGui::Separator();
     
             ComboRow("Checkpoint", g_propertyState.checkpoint, entrances);
+            state.checkpoint = g_propertyState.checkpoint;  // also update current checkpoint view 
+                        
             const unsigned entranceBase = 0xA78000 + 0x100 * static_cast<unsigned>(state.level) + 0x20 * static_cast<unsigned>(g_propertyState.checkpoint);
             DrawNumberProperty(state, "Death level", 1, { entranceBase + 0x1 }, expanded);
             DrawNumberProperty(state, "State0", 1, { entranceBase + 0x0 }, expanded);
@@ -1016,10 +1044,15 @@ namespace {
             DrawNumberProperty(state, "X pos", 2, { entranceBase + 0x2 }, expanded);
             DrawNumberProperty(state, "Y pos", 2, { entranceBase + 0x4 }, expanded);
             ImGui::Separator();        
-            DrawNumberProperty(state, "Camera left", 2, { entranceBase + 0x12 }, expanded);
-            DrawNumberProperty(state, "Camera right", 2, { entranceBase + 0x14 }, expanded);
-            DrawNumberProperty(state, "Camera top", 2, { entranceBase + 0x16 }, expanded);
-            DrawNumberProperty(state, "Camera bottom", 2, { entranceBase + 0x18 }, expanded);
+            //DrawNumberProperty(state, "Border left", 2, { entranceBase + 0x12 }, expanded);
+            //DrawNumberProperty(state, "Border right", 2, { entranceBase + 0x14 }, expanded);
+            //DrawNumberProperty(state, "Border top", 2, { entranceBase + 0x16 }, expanded);
+            //DrawNumberProperty(state, "Border bottom", 2, { entranceBase + 0x18 }, expanded);
+            DrawNumberPropertySlider(state, "Border left", 2, { entranceBase + 0x12 }, 0x0 ,0xE00 ,expanded);
+            DrawNumberPropertySlider(state, "Border right", 2, { entranceBase + 0x14 }, 0x0, 0xE00, expanded);
+            DrawNumberPropertySlider(state, "Border top", 2, { entranceBase + 0x16 }, 0x0, 0xE00, expanded);
+            DrawNumberPropertySlider(state, "Border bottom", 2, { entranceBase + 0x18 }, 0x0, 0xE00, expanded);
+
             ImGui::Separator();
             DrawNumberProperty(state, "Cam0 X", 2, { entranceBase + 0x6 }, expanded);
             DrawNumberProperty(state, "Cam0 Y", 2, { entranceBase + 0x8 }, expanded);
@@ -1031,9 +1064,6 @@ namespace {
             ImGui::Separator();
             DrawNumberProperty(state, "Camera pointer", 2, { entranceBase + 0x1E }, expanded);
             ImGui::Separator();
-    
-
-    
     
             ImGui::Spacing();
             ImGui::Spacing();

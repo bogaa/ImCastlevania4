@@ -786,15 +786,16 @@ static void DrawSidebar(EditorState& state)
             state.redoStack.clear();
         }
     }
-    if (ImGui::SliderInt("Checkpoint", &state.checkpoint, 0, 15)) {
-        if (state.session.IsLoaded() && state.session.LoadLevel(state.level, state.checkpoint)) {
-            state.session.LoadCurrentLayer(state.showBackground);
-            state.levelRenderer.Invalidate();
-            state.selectedEventIndex = -1;
-            state.undoStack.clear();
-            state.redoStack.clear();
-        }
-    }
+    // it can be selected in the property checkpoint editor. 
+    //if (ImGui::SliderInt("Checkpoint", &state.checkpoint, 0, 7)) {
+    //    if (state.session.IsLoaded() && state.session.LoadLevel(state.level, state.checkpoint)) {
+    //        state.session.LoadCurrentLayer(state.showBackground);
+    //        state.levelRenderer.Invalidate();
+    //        state.selectedEventIndex = -1;
+    //        state.undoStack.clear();
+    //        state.redoStack.clear();
+    //    }
+    //}
     ImGui::SliderFloat("Zoom", &state.zoom, 1.0f, 4.0f, "%.1fx");
     int paintBlock = (static_cast<int>(state.selectedBlock) & 0x3ffu);
     ImGui::SetNextItemWidth(96.0f);
@@ -900,13 +901,45 @@ static void DrawInternalEmulator(EditorState& state, ID3D11Device* device)
     const ImVec2 imageSize(256.0f * scale, 224.0f * scale);
     ImGui::Image(reinterpret_cast<ImTextureID>(g_emulatorTextureView), imageSize);
     g_internalEmulatorCapturesKeyboard = ImGui::IsItemHovered() || ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-    ImGui::Text("Level %d  Camera %d,%d  State %04X/%04X",
-        frame.levelNum,
-        frame.xpos,
-        frame.ypos,
-        frame.state0,
-        frame.state1);
+  
+    ImGui::Text("Level %d",
+    frame.levelNum);
 
+    ImGui::Text("Border");
+    ImGui::Text("Left %d Right %d Top %d,Bottom %d",
+    frame.A0, frame.A2, frame.A4, frame.A6);
+    
+    ImGui::Text("Pos %d,%d    Cam0 %d,%d    Cam1 %d,%d",
+    frame.s_xpos, frame.s_ypos, frame.c0_xpos, frame.c0_ypos, frame.c1_xpos, frame.c1_ypos);
+
+    ImGui::Text("ScrollSpd");
+    ImGui::Text("%d,%d",
+    frame.A8, frame.AA);
+
+    ImGui::Text("State %04X/%04X    Layer Priority %X",
+    frame.state0, frame.state1, frame.lockState);
+
+    const unsigned entranceBase = 0xA78000 + 0x100 * static_cast<unsigned>(state.level) + 0x20 * static_cast<unsigned>(state.checkpoint);
+    if (ImGui::Button("Record from Emulator")) {
+        state.session.WriteRom(entranceBase + 0x00, 2, static_cast<unsigned>(state.checkpoint));     
+        state.session.WriteRom(entranceBase + 0x02, 2, static_cast<unsigned>(frame.s_xpos));
+        state.session.WriteRom(entranceBase + 0x04, 2, static_cast<unsigned>(frame.s_ypos));
+        state.session.WriteRom(entranceBase + 0x06, 2, static_cast<unsigned>(frame.c0_xpos));
+        state.session.WriteRom(entranceBase + 0x08, 2, static_cast<unsigned>(frame.c0_ypos));
+        state.session.WriteRom(entranceBase + 0x0A, 2, static_cast<unsigned>(frame.c1_xpos));
+        state.session.WriteRom(entranceBase + 0x0C, 2, static_cast<unsigned>(frame.c1_ypos));
+        state.session.WriteRom(entranceBase + 0x0E, 2, static_cast<unsigned>(frame.state1));
+        state.session.WriteRom(entranceBase + 0x10, 2, static_cast<unsigned>(frame.lockState));
+        state.session.WriteRom(entranceBase + 0x12, 2, static_cast<unsigned>(frame.A0));
+        state.session.WriteRom(entranceBase + 0x14, 2, static_cast<unsigned>(frame.A2));
+        state.session.WriteRom(entranceBase + 0x16, 2, static_cast<unsigned>(frame.A4));
+        state.session.WriteRom(entranceBase + 0x18, 2, static_cast<unsigned>(frame.A6));
+        state.session.WriteRom(entranceBase + 0x1A, 2, static_cast<unsigned>(frame.A8));
+        state.session.WriteRom(entranceBase + 0x1C, 2, static_cast<unsigned>(frame.AA));
+        //state.session.WriteRom(entranceBase + 0x1E, 2, static_cast<unsigned>(0xC358)); // what is this really?
+        state.levelRenderer.Invalidate();
+    }
+    
     ImGui::End();
 }
 
@@ -2745,10 +2778,10 @@ static void DrawHelpView(EditorState& state)
             HelpRow("Ctrl+Z", "Undo the last supported ROM edit.");
             HelpRow("Ctrl+Y / Ctrl+Shift+Z", "Redo the last undone ROM edit.");
             HelpRow("Delete", "Delete the selected event in Level View.");
-            HelpRow("Mouse wheel", "Scroll panels and lists. In Level View, use the Zoom slider for level scale.");
+            HelpRow("Mouse wheel", "Scroll panels and lists. In Level View, used for zooming.");
             HelpRow("Middle drag", "Pan the Level View.");
             HelpRow("Left click", "Select or paint, depending on the active tool.");
-            HelpRow("Right click", "Sample or copy in level/block editing, and copy-drag events.");
+            HelpRow("Right click", "Sample or copy/rotate in level/block editing, and copy-drag events.");
             HelpRow("Drag/drop", "Drag event templates from Tools > Edit Events into Level View. Drop PNG files onto Scratch Board.");
             ImGui::EndTable();
         }
@@ -2790,13 +2823,15 @@ static void DrawHelpView(EditorState& state)
             ImGui::TableSetupColumn("Tab", ImGuiTableColumnFlags_WidthFixed, 135.0f);
             ImGui::TableSetupColumn("What it does");
             ImGui::TableHeadersRow();
-            HelpRow("Edit Events", "Event template palette. Browse Candles, Enemies, and Misc, then drag templates into Level View.");
-            HelpRow("Draw Tiles", "Block painting mode. Select a block from the block palette, paint it into Level View, and copy/paste available tiles through the clipboard.");
-            HelpRow("Edit Blocks", "Edit the 4x4 tile makeup of a block. Pick a block, choose tiles/palette/flip flags, and paint individual block cells.");
-            HelpRow("Tile Behavior", "Inspect and edit tile behavior types. Expanded ROMs can write per-tile behavior directly.");
+            HelpRow("Events", "Event template palette. Browse Candles, Enemies, and Misc, then drag templates into Level View.");
+            HelpRow("Draw Scene", "Block painting mode. Select a block from the block palette, paint it into Level View, and copy/paste available tiles through the clipboard.");
+            HelpRow("Tile32", "Edit the 4x4 tile makeup of a block. Pick a block, choose tiles/palette/flip flags, and paint individual block cells.");
+            HelpRow("Collusion", "Inspect and edit tile behavior types. Expanded ROMs can write per-tile behavior directly.");
             HelpRow("HUD", "Edit HUD tile items and positions with a preview canvas and item list.");
-            HelpRow("Edit Sprites", "Edit sprite/tile graphics and palettes for global or level-specific sprite data.");
+            HelpRow("Sprites", "Edit sprite/tile graphics and palettes for global or level-specific sprite data.");
             HelpRow("Scratch Board", "Drop or import PNG artwork, choose target palettes and a starting tile, or import image data as level/background art.");
+            HelpRow("Music", "Select the songID you like to edit. Import and export to midi. Rebuild notes/instruments from pianorol to songformat in the rom. (Still experimental!)");
+            HelpRow("Instruments", "Import/Export BRR to Wave samples.");
             ImGui::EndTable();
         }
     }
@@ -2903,7 +2938,7 @@ static void DrawDockSpace(EditorState& state, HWND hwnd)
 void DrawEditorUi(EditorState& state, HWND hwnd, ID3D11Device* device, const std::vector<std::wstring>& droppedFiles)
 {
     hWID[0] = hwnd;
-    std::string windowTitle = "SC4Ed ImGui";
+    std::string windowTitle = "ImCastlevania4 v0.0.3";
     if (state.session.IsLoaded()) {
         const std::string& path = state.session.Info().path;
         const size_t slash = path.find_last_of("\\/");
