@@ -1981,10 +1981,7 @@ unsigned LevelRenderer::GetBlockOffset(const SC4Core& core, uint16_t block) cons
         return (blockNum << 5) + 0x2000 + core.mapBase;
     }
     if (core.type == 1) {
-        return (blockNum << 5) + 0x1000 + core.mapBase;
-    }
-    if (core.type == 2) {
-        return (blockNum << 5) + 0x3000 + core.mapBase;
+        return (blockNum << 5) + 0x2000 + core.mapBase;     // FIXME not sure CheckDracX 
     }
     return 0;
 }

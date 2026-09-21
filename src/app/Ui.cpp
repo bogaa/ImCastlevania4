@@ -904,21 +904,27 @@ static void DrawInternalEmulator(EditorState& state, ID3D11Device* device)
   
     ImGui::Text("Level %d",
     frame.levelNum);
-
-    ImGui::Text("Border");
-    ImGui::Text("Left %d Right %d Top %d,Bottom %d",
+    ImGui::Separator();
+    ImGui::TextDisabled("Border      ");
+    ImGui::SameLine();
+    ImGui::Text("Left %d    Right %d    Top %d,   Bottom %d",
     frame.A0, frame.A2, frame.A4, frame.A6);
     
-    ImGui::Text("Pos %d,%d    Cam0 %d,%d    Cam1 %d,%d",
+    ImGui::TextDisabled("PlayerPos   ");
+    ImGui::SameLine();
+    ImGui::Text("%d,%d    Cam0 %d,%d    Cam1 %d,%d",
     frame.s_xpos, frame.s_ypos, frame.c0_xpos, frame.c0_ypos, frame.c1_xpos, frame.c1_ypos);
 
-    ImGui::Text("ScrollSpd");
+    ImGui::TextDisabled("ScrollSpd   ");
+    ImGui::SameLine();
     ImGui::Text("%d,%d",
     frame.A8, frame.AA);
 
-    ImGui::Text("State %04X/%04X    Layer Priority %X",
+    ImGui::TextDisabled("Player State");
+    ImGui::SameLine();
+    ImGui::Text("%04X/%04X    Layer Priority %X",
     frame.state0, frame.state1, frame.lockState);
-
+    ImGui::Separator();
     const unsigned entranceBase = 0xA78000 + 0x100 * static_cast<unsigned>(state.level) + 0x20 * static_cast<unsigned>(state.checkpoint);
     if (ImGui::Button("Record from Emulator")) {
         state.session.WriteRom(entranceBase + 0x00, 2, static_cast<unsigned>(state.checkpoint));     
@@ -939,7 +945,17 @@ static void DrawInternalEmulator(EditorState& state, ID3D11Device* device)
         //state.session.WriteRom(entranceBase + 0x1E, 2, static_cast<unsigned>(0xC358)); // what is this really?
         state.levelRenderer.Invalidate();
     }
-    
+    ImGui::SameLine;
+    static int recordJoy_B = 0; 
+    if (ImGui::Button("Set Joy B")) {
+        recordJoy_B++ ;
+    }
+    if (recordJoy_B & 1) {
+        ImGui::Text("Press B Button");
+
+    }
+            
+
     ImGui::End();
 }
 

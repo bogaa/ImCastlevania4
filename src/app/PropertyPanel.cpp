@@ -173,7 +173,7 @@ namespace {
         value = std::clamp(value, minValue, maxValue);
 
         ImGui::BeginDisabled(!canEdit);
-        const float valueWidth = byteCount == 1 ? 64.0f : byteCount == 2 ? 88.0f : 112.0f;
+        const float valueWidth = byteCount == 1 ? 192.0f : byteCount == 2 ? 264.0f : 336.0f;
         BeginPropertyRow(label, valueWidth);
 
         if (ImGui::SliderInt("##value", &value, minValue, maxValue)) {
@@ -896,26 +896,38 @@ namespace {
 
                     DrawComboProperty(state, "Exit type", g_propertyState.exitType, exitTypes, 1, { exitBase + 0x0 }, expanded);   // DrawNumberProperty(state, "Exit type value", 1, { exitBase + 0x0 }, expanded);                  
                     DrawNumberProperty(state, "Exit cmp value X or Y", 2, { exitBase + 0x2 }, expanded);
-                    DrawNumberProperty(state, "Transition Selector", 1, { exitBase + 0x1 }, expanded);
-
+                    DrawNumberPropertySlider(state, "Transition Selector", 1, { exitBase + 0x1 }, 0x0, 0x7, expanded); 
+                    const int transitionSelector = static_cast<int>(state.session.ReadRom(exitBase + 0x1, 1));                    // cast selection for the table to edit.  
+                    g_propertyState.nextLevelDirection = std::clamp(transitionSelector, 0, static_cast<int>(entrances.size()) - 1);
+                    
                     ImGui::Separator();     // ImGui::TextDisabled("Level Transit Editor");  Not needed info for end users. 
+                    ImGui::BeginDisabled(disabled);
+                    ComboRow("Transition", g_propertyState.nextLevelDirection, entrances);
+                    ImGui::EndDisabled();
                     const unsigned transitionBase = EXP_LEVEL_TRANSIT + 0x10 * static_cast<unsigned>(state.level) + 0x2 * static_cast<unsigned>(g_propertyState.nextLevelDirection);
-                    ComboRow("Transition", g_propertyState.nextLevelDirection, entrances);     // select yourself
                     DrawNumberProperty(state, "Next Level", 1, { transitionBase + 0x0 }, expanded);
-                    DrawNumberProperty(state, "Next Checkpoint", 1, { transitionBase + 0x1 }, expanded);
+                    
+                    DrawNumberPropertySlider(state, "Next Checkpoint", 1, { transitionBase + 0x1 },0x0 ,0x7 , expanded);                     
+                    //int nextCheckpoint = static_cast<int>(transitionBase + 0x1);    // fails becasue?? reflecting in a combo row seems better to differanciate it as a user.       
+                    //ComboRow("Next Checkpoint", nextCheckpoint, entrances);
+                    
                 }
             }
 
             if (event->eventId == 0x41) {
                 if (ImGui::CollapsingHeader("Camlock Editor", ImGuiTreeNodeFlags_DefaultOpen)) {
                     static const std::vector<std::string> cameraLocks = NumberItems(0x20);
-                  // static const std::vector<std::string> directionValues = { "1", "2", };
+                    g_propertyState.cameraLock = (static_cast<int>(event->eventSubId) & 0x1F);
+                  //static const std::vector<std::string> directionValues = { "1",              "2", };
                   // static const std::vector<std::string> directionNames = { "Down Right", "Up Left"};
-                  //
+                  // dirAddress 55a,55e    cmpAddress 54a,54e     dirAddressFreeCam 12a6,12a8     cmpAddressFreeCam 1298,129a  X,Y
                   // static const std::vector<std::string> directionAddress = { "0xA0", "0xA2","0xA4", "0xA6" };
                   // static const std::vector<std::string> directionLabels = { "Left", "Right","Bottom", "Top" };
-
+                    bool disabled = true;
+                    ImGui::BeginDisabled(disabled);
                     ComboRow("Camera lock", g_propertyState.cameraLock, cameraLocks);
+                    ImGui::EndDisabled();
+                    
                     const unsigned lockBase = 0xA58000 + 0xC * 0x20 * static_cast<unsigned>(state.level) + 0xC * static_cast<unsigned>(g_propertyState.cameraLock);
                     DrawNumberProperty(state, "Lock direction", 2, { lockBase + 0x0 }, expanded);
                     DrawNumberProperty(state, "Lock dir addr", 2, { lockBase + 0x2 }, expanded);
@@ -997,16 +1009,17 @@ namespace {
     static void DrawLevelProperties(EditorState& state)
     {
         if (ImGui::CollapsingHeader("Level", ImGuiTreeNodeFlags_DefaultOpen)) {
-            const unsigned deathBase = state.session.Region() == 0 ? 0x81B395 : 0x81B369;
+            
             DrawNumberProperty(state, "Continue level", 1, { LevelAddress(LEVEL_CONTINUE, state) });
             DrawNumberProperty(state, "Music", 1, { LevelAddress(LEVEL_MUSIK, state) });
-            DrawNumberProperty(state, "Timer", 2, { LevelAddress(LEVEL_TIMER, state, 2) });    // FIXME This is already decimal in the rom 
+            DrawNumberProperty(state, "Timer", 2, { LevelAddress(LEVEL_TIMER, state, 2) });       // FIXME This is already decimal in the rom 
             DrawNumberProperty(state, "Enemy Damage Buff", 1, { LevelAddress(LEVEL_DAMAGE_BUFF, state, 1) });            
-            DrawNumberProperty(state, "Level Type", 2, { LevelAddress(LEVEL_TYPE, state, 2) });
+            DrawNumberProperty(state, "Level Type", 2, { LevelAddress(LEVEL_TYPE, state, 2) });   // FIXME ComboBox describe pluse level reload! Check if loadMOD7 rooms break rom!
             DrawNumberProperty(state, "Layer Transperent Mask", 2, { LevelAddress(LEVEL_BG_PROPERTY_MASK_BASE, state, 2) });
             DrawFlaggedWordProperty(state, "Layer Scroll Modes", "Layer behavior flag", { LevelAddress(LEVEL_BG_SCROLL_BASE, state, 2) }, 0x8000);
             DrawNumberProperty(state, "Event direction", 1, { LevelAddress(LEVEL_LOAD_DIRECTION, state) });
            //reused or not properly implemented stuff..
+           //const unsigned deathBase = state.session.Region() == 0 ? 0x81B395 : 0x81B369;
            //DrawNumberProperty(state, "Death level", 1, { LevelAddress(deathBase, state) }); // unexpanded death level??
            //DrawNumberProperty(state, "BG animation 0", 2, { LevelAddress(0x85CA82, state, 2) });
            //DrawNumberProperty(state, "BG animation 1", 2, { LevelAddress(0x85CB0A, state, 2) });
@@ -1026,9 +1039,6 @@ namespace {
             }
     
             static const std::vector<std::string> entrances = { "0", "1", "2", "3", "4", "5", "6", "7" };
-    //        static const std::vector<std::string> exitTypes = { "Init (DONT USE)", "Stairs Up", "Stairs Down", "Left", "Right" };
-    //        static const std::vector<std::string> cameraLocks = NumberItems(0x20);
-    //        static const std::vector<std::string> exitChecks = NumberItems(0x40);
             ImGui::BeginDisabled(!expanded);
             ImGui::Separator();
             ImGui::TextDisabled("Entrance property for each checkpoint");
@@ -1048,7 +1058,7 @@ namespace {
             //DrawNumberProperty(state, "Border right", 2, { entranceBase + 0x14 }, expanded);
             //DrawNumberProperty(state, "Border top", 2, { entranceBase + 0x16 }, expanded);
             //DrawNumberProperty(state, "Border bottom", 2, { entranceBase + 0x18 }, expanded);
-            DrawNumberPropertySlider(state, "Border left", 2, { entranceBase + 0x12 }, 0x0 ,0xE00 ,expanded);
+            DrawNumberPropertySlider(state, "Border left", 2, { entranceBase + 0x12 }, 0x0 ,0xE00,expanded);
             DrawNumberPropertySlider(state, "Border right", 2, { entranceBase + 0x14 }, 0x0, 0xE00, expanded);
             DrawNumberPropertySlider(state, "Border top", 2, { entranceBase + 0x16 }, 0x0, 0xE00, expanded);
             DrawNumberPropertySlider(state, "Border bottom", 2, { entranceBase + 0x18 }, 0x0, 0xE00, expanded);
@@ -1067,41 +1077,6 @@ namespace {
     
             ImGui::Spacing();
             ImGui::Spacing();
- 
-             //  ImGui::Separator();       // This is moved to the event dialog 
-             //  ImGui::TextDisabled("Exit event ID 21");     
-             //  ImGui::Separator();
-             //
-             //  ComboRow("Exit SubID", g_propertyState.exitCheck, exitChecks);
-             //  const unsigned exitBase = 0xA68000 + 0x40 * 0x4 * static_cast<unsigned>(state.level) + 0x4 * static_cast<unsigned>(g_propertyState.exitCheck);
-             //  DrawComboProperty(state, "Exit type", g_propertyState.exitType, exitTypes, 1, { exitBase + 0x0 }, expanded);
-             //  //DrawNumberProperty(state, "Exit type value", 1, { exitBase + 0x0 }, expanded);
-             //  DrawNumberProperty(state, "Exit cmp value Y", 2, { exitBase + 0x2 }, expanded); 
-             //  DrawNumberProperty(state, "Transit num for transit", 1, { exitBase + 0x1 }, expanded);
-             //  
-             //  ImGui::TextDisabled("Exit level transit");
-             //  ImGui::Separator();
-             //
-             //  ComboRow("Next level checkpoint", g_propertyState.nextLevelDirection, entrances);
-             //  const unsigned transitionBase = 0xA0C000 + 0x10 * static_cast<unsigned>(state.level) + 0x2 * static_cast<unsigned>(g_propertyState.nextLevelDirection);
-             //  DrawNumberProperty(state, "Transit num of event", 1, { transitionBase + 0x1 }, expanded);
-             //  DrawNumberProperty(state, "Next level", 1, { transitionBase + 0x0 }, expanded);
-             //
-             //  
-             //  ImGui::Spacing();
-             //  ImGui::Spacing();
-             //  ImGui::Separator();
-             //  ImGui::TextDisabled("Camlock event ID 65");
-             //  ImGui::Separator();
-             //
-             //  ComboRow("Camera lock", g_propertyState.cameraLock, cameraLocks);
-             //  const unsigned lockBase = 0xA58000 + 0xC * 0x20 * static_cast<unsigned>(state.level) + 0xC * static_cast<unsigned>(g_propertyState.cameraLock);
-             //  DrawNumberProperty(state, "Lock direction", 2, { lockBase + 0x0 }, expanded);
-             //  DrawNumberProperty(state, "Lock dir addr", 2, { lockBase + 0x2 }, expanded);
-             //  DrawNumberProperty(state, "Lock cmp addr", 2, { lockBase + 0x4 }, expanded);
-             //  DrawNumberProperty(state, "Lock cmp value", 2, { lockBase + 0x6 }, expanded);
-             //  DrawNumberProperty(state, "Lock store value", 2, { lockBase + 0x8 }, expanded);
-             //  DrawNumberProperty(state, "Lock store addr", 2, { lockBase + 0xA }, expanded);
             
             ImGui::EndDisabled();
         

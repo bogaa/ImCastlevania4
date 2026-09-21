@@ -113,28 +113,10 @@ const WORD SC4Core::levelFormatVersion = 2;
 #define SReadDWord(offset) (*((DWORD*)(rom+SNESCore::snes2pc(offset))))
 #define SReadLpByte(offset) (((LPBYTE)(rom+SNESCore::snes2pc(offset))))
 
-const long p_layout[2] = {NULL, NULL};		
-const long p_scenes[2] = {NULL, NULL};
-const long p_blocks[2] = {NULL, NULL};
-const long p_maps  [2] = {NULL, NULL};
-const long p_collis[2] = {NULL, NULL};
 const long p_checkp[2] = {NULL, NULL};
-const long p_palett[2] = {NULL, NULL};
 const long p_font  [2] = {NULL, NULL};
-const long p_unknow[2] = {NULL, NULL}; 
-const long p_gfxcfg[2] = {NULL, NULL};
-const long p_gfxpos[2] = {NULL,	NULL};
 const long p_events[2] = {0x80D81B, 0x81A8AE};	// evPointer SC4, DracX StageP 81A89A
-const long p_borders[2]= { NULL, NULL };
 const long p_locks[2]  = { NULL, NULL };
-const long p_properties[2] = { NULL, NULL };
-const long p_spriteAssembly[2] = { NULL, NULL };
-const long p_spriteOffset[2] = { NULL, NULL };
-const long p_objOffset[2] = { NULL, NULL };
-const long p_gfxobj[2] = { NULL, NULL };	// enemy
-const long p_gfxpal[2] = { NULL, NULL };
-//const long p_capsulepos[3] = { NULL, NULL, NULL };
-
 const long p_blayout[2] = { NULL, NULL };
 const long p_bscenes[2] = { NULL, NULL };
 const long p_bblocks[2] = { NULL, NULL };
@@ -250,11 +232,11 @@ void SC4Core::GenerateExpandedOffset() {
 	if (type == 0) {
 		for (unsigned i = 0; i < numLevels; i++) {
 			DWORD addr;
-			////addrList.push_back(0x81B5D9); // bg tile map
+
 			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x86889C) + (i * 2));		// GFX LVL
 			addrList.push_back(addr);
 			
-			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x868B45) + (i * 2));		// GFX enemy 
+			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x868B45) + (i * 2));		// GFX enemy compressed
 			addrList.push_back(addr);
 			
 			addr = 0x86 << 16 | *LPWORD(rom + SNESCore::snes2pc(0x868000) + (i * 2));		// Block Map
@@ -396,9 +378,9 @@ bool SC4Core::GetBaseAddr(unsigned mode, DWORD addr, DWORD &baseAddr, WORD &newS
 			}
 			break;
 			//case 0x0000:
-		case 0x0002:
-		case 0x0003:
-		case 0xA001:
+			case 0x0002:
+			case 0x0003:
+			case 0xA001:
 			break;
 		default:
 			// 3 bytes
@@ -4479,28 +4461,29 @@ bool SC4Core::DelEvent(unsigned num) {
 		else if (type == 1) {
 
 		}
-		else if (type == 2) {
-			auto it = eventTable.begin();
-			std::advance(it, num);
-			eventTable.erase(it);
-
-			DWORD pEvents = snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16));
-			LPBYTE pevent = rom + pEvents + num * 4;
-
-			DWORD pEnd = snes2pc((eventBank << 16) + (eventOffsetLimit));
-			LPBYTE pend = rom + pEnd;
-
-			// make a spot for the new event
-			memmove(pevent, pevent + 4, pend - pevent - 4);
-			memset(pend - 4, 0xFF, 4);
-
-			for (unsigned i = level + 1; i < numLevels; i++) {
-				*LPWORD(rom + snes2pc(p_events[type] + i * 2)) -= 4;
-			}
-
-			// update ROM state
-			SaveEvents();
-		}
+		// gradius 
+		//else if (type == 2) {
+		//	auto it = eventTable.begin();
+		//	std::advance(it, num);
+		//	eventTable.erase(it);
+		//
+		//	DWORD pEvents = snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16));
+		//	LPBYTE pevent = rom + pEvents + num * 4;
+		//
+		//	DWORD pEnd = snes2pc((eventBank << 16) + (eventOffsetLimit));
+		//	LPBYTE pend = rom + pEnd;
+		//
+		//	// make a spot for the new event
+		//	memmove(pevent, pevent + 4, pend - pevent - 4);
+		//	memset(pend - 4, 0xFF, 4);
+		//
+		//	for (unsigned i = level + 1; i < numLevels; i++) {
+		//		*LPWORD(rom + snes2pc(p_events[type] + i * 2)) -= 4;
+		//	}
+		//
+		//	// update ROM state
+		//	SaveEvents();
+		//}
 	}
 
 	return ok;
@@ -4683,34 +4666,34 @@ void SC4Core::LoadLayout()
 	//}
 	return;
 }
-void SC4Core::SwitchLevelEvent(bool ev)
-{
-	WORD src, dest;
-	switch(level)
-	{
-	case 2:
-		sceneLayout[0x64] = sceneLayout[0xA0];
-		sceneLayout[0x65] = sceneLayout[0xA1];
-		sceneLayout[0x66] = sceneLayout[0xA2];
-		sceneLayout[0x67] = sceneLayout[0xA3];
-		
-		sceneLayout[0x41] = sceneLayout[0xA4];
-		sceneLayout[0x42] = sceneLayout[0xA5];
-		sceneLayout[0x43] = sceneLayout[0xA6];
-		sceneLayout[0x44] = sceneLayout[0xA7];
-		break;
-	case 4:
-		src  = (WORD)((ReadDWord(0x3C79) & 0xFFFFFF) - 0x7EE800);
-		dest = (WORD)((ReadDWord(0x3C7D) & 0xFFFFFF) - 0x7EE800);
-		sceneLayout[dest] = sceneLayout[src];
-		break;
-	case 6:
-		src  = (WORD)((ReadDWord(0x3C8B) & 0xFFFFFF) - 0x7EE800);
-		dest = (WORD)((ReadDWord(0x3C8F) & 0xFFFFFF) - 0x7EE800);
-		sceneLayout[dest-3] = sceneLayout[src-4];
-		break;
-	}
-}
+//void SC4Core::SwitchLevelEvent(bool ev)
+//{
+//	WORD src, dest;
+//	switch(level)
+//	{
+//	case 2:
+//		sceneLayout[0x64] = sceneLayout[0xA0];
+//		sceneLayout[0x65] = sceneLayout[0xA1];
+//		sceneLayout[0x66] = sceneLayout[0xA2];
+//		sceneLayout[0x67] = sceneLayout[0xA3];
+//		
+//		sceneLayout[0x41] = sceneLayout[0xA4];
+//		sceneLayout[0x42] = sceneLayout[0xA5];
+//		sceneLayout[0x43] = sceneLayout[0xA6];
+//		sceneLayout[0x44] = sceneLayout[0xA7];
+//		break;
+//	case 4:
+//		src  = (WORD)((ReadDWord(0x3C79) & 0xFFFFFF) - 0x7EE800);
+//		dest = (WORD)((ReadDWord(0x3C7D) & 0xFFFFFF) - 0x7EE800);
+//		sceneLayout[dest] = sceneLayout[src];
+//		break;
+//	case 6:
+//		src  = (WORD)((ReadDWord(0x3C8B) & 0xFFFFFF) - 0x7EE800);
+//		dest = (WORD)((ReadDWord(0x3C8F) & 0xFFFFFF) - 0x7EE800);
+//		sceneLayout[dest-3] = sceneLayout[src-4];
+//		break;
+//	}
+//}
 void SC4Core::SaveLevel() {
 	//byte tvram[0x8000];
 	//ZeroMemory(vram, 0x8000);
@@ -4852,53 +4835,53 @@ void SC4Core::SaveEvents() {
 			sceneNum++;
 		}
 	}
-	else if (type == 2) {
-		DWORD pEvent = snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16));
-		LPBYTE pevent = rom + pEvent;
-
-		for (auto &event : eventTable) {
-			// TODO: write out events
-
-			WORD x = event.xpos; // +0x28;
-
-			//event.type = *LPWORD(pevent + 2) & 0x3;
-			//event.xpos = ((*LPWORD(pevent + 0) & 0xFFC0) >> 3); // -0x28;
-
-			if (event.type == 0 || event.type == 1) {
-				//event.ypos = (*LPWORD(pevent + 2) & 0xFC) + ((*LPWORD(pevent + 0) & 0x20) << 3); // ypos
-				//event.eventId = *LPWORD(pevent + 3) & 0x7F; // id
-				//event.eventSubId = *LPWORD(pevent + 0) & 0x1F; // slot
-				//event.unknown = *LPWORD(pevent + 2) & 0x8000;
-
-				*LPWORD(pevent + 0) = ((x << 3) & 0xFFC0) | ((event.ypos & 0x100) >> 3) | (event.eventSubId & 0x1F);
-				*LPBYTE(pevent + 2) = (event.ypos & 0xFC) | (event.type & 0x3);
-				*LPBYTE(pevent + 3) = (event.eventId & 0x7F) | (event.unknown >> 8);
-			}
-			else if (event.type == 2) {
-				//event.ypos = *LPWORD(pevent + 2) & 0x00FC;
-				//event.eventId = *LPWORD(pevent + 3) & 0x007F;
-				//event.eventSubId = *LPWORD(pevent + 0) & 0x003F;
-				//event.unknown = *LPWORD(pevent + 2) & 0x8000;
-
-				*LPWORD(pevent + 0) = ((x << 3) & 0xFFC0) | (event.eventSubId & 0x3F);
-				*LPWORD(pevent + 2) = (event.unknown) | (event.ypos & 0x00FC) | (event.type & 0x3) | ((event.eventId & 0x7F) << 8);
-			}
-			else if (event.type == 3) {
-				//event.ypos = 0;
-				//event.eventId = *LPBYTE(pevent + 0) & 0x3F; // id
-				//event.eventSubId = *LPBYTE(pevent + 3) & 0xFF;
-				//event.unknown = *LPBYTE(pevent + 2) & 0xFC;
-
-				*LPWORD(pevent + 0) = ((x << 3) & 0xFFC0) | (event.eventId & 0x3F);
-				*LPBYTE(pevent + 2) = (event.unknown & 0xFC) | (event.type & 0x3);
-				*LPBYTE(pevent + 3) = (event.eventSubId & 0xFF);
-			}
-
-			pevent += 4;
-		}
-
-		*LPWORD(pevent) = 0xFFFF;
-	}
+	//else if (type == 2) {
+	//	DWORD pEvent = snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16));
+	//	LPBYTE pevent = rom + pEvent;
+	//
+	//	for (auto &event : eventTable) {
+	//		// TODO: write out events
+	//
+	//		WORD x = event.xpos; // +0x28;
+	//
+	//		//event.type = *LPWORD(pevent + 2) & 0x3;
+	//		//event.xpos = ((*LPWORD(pevent + 0) & 0xFFC0) >> 3); // -0x28;
+	//
+	//		if (event.type == 0 || event.type == 1) {
+	//			//event.ypos = (*LPWORD(pevent + 2) & 0xFC) + ((*LPWORD(pevent + 0) & 0x20) << 3); // ypos
+	//			//event.eventId = *LPWORD(pevent + 3) & 0x7F; // id
+	//			//event.eventSubId = *LPWORD(pevent + 0) & 0x1F; // slot
+	//			//event.unknown = *LPWORD(pevent + 2) & 0x8000;
+	//
+	//			*LPWORD(pevent + 0) = ((x << 3) & 0xFFC0) | ((event.ypos & 0x100) >> 3) | (event.eventSubId & 0x1F);
+	//			*LPBYTE(pevent + 2) = (event.ypos & 0xFC) | (event.type & 0x3);
+	//			*LPBYTE(pevent + 3) = (event.eventId & 0x7F) | (event.unknown >> 8);
+	//		}
+	//		else if (event.type == 2) {
+	//			//event.ypos = *LPWORD(pevent + 2) & 0x00FC;
+	//			//event.eventId = *LPWORD(pevent + 3) & 0x007F;
+	//			//event.eventSubId = *LPWORD(pevent + 0) & 0x003F;
+	//			//event.unknown = *LPWORD(pevent + 2) & 0x8000;
+	//
+	//			*LPWORD(pevent + 0) = ((x << 3) & 0xFFC0) | (event.eventSubId & 0x3F);
+	//			*LPWORD(pevent + 2) = (event.unknown) | (event.ypos & 0x00FC) | (event.type & 0x3) | ((event.eventId & 0x7F) << 8);
+	//		}
+	//		else if (event.type == 3) {
+	//			//event.ypos = 0;
+	//			//event.eventId = *LPBYTE(pevent + 0) & 0x3F; // id
+	//			//event.eventSubId = *LPBYTE(pevent + 3) & 0xFF;
+	//			//event.unknown = *LPBYTE(pevent + 2) & 0xFC;
+	//
+	//			*LPWORD(pevent + 0) = ((x << 3) & 0xFFC0) | (event.eventId & 0x3F);
+	//			*LPBYTE(pevent + 2) = (event.unknown & 0xFC) | (event.type & 0x3);
+	//			*LPBYTE(pevent + 3) = (event.eventSubId & 0xFF);
+	//		}
+	//
+	//		pevent += 4;
+	//	}
+	//
+	//	*LPWORD(pevent) = 0xFFFF;
+	//}
 
 }
 
@@ -5190,85 +5173,85 @@ void SC4Core::SaveSprites() {
 	}
 }
 
-bool SC4Core::LoadLevelFromFile(std::string fileName)
-{
-	if (!expandedROM)
-		return false;
-
-	unsigned currentOffset = 0;
-	std::vector<BYTE> lData;
-
-	// open file
-	auto hLevelFile = CreateFile(fileName.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-	if (!hLevelFile) {
-		return false;
-	}
-	lData.resize(GetFileSize(hLevelFile, NULL));
-	OVERLAPPED overlapped;
-	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-	DWORD bytesR;
-	if (!ReadFile(hLevelFile, &lData[0], lData.size(), &bytesR, &overlapped))
-		return false;
-	if (bytesR != lData.size())
-		return false;
-
-	if (hLevelFile)
-		CloseHandle(hLevelFile);
-
-	// check version
-	if (*LPWORD(&lData[0]) != levelFormatVersion) return false;
-	if (*LPWORD(&lData[2]) != expandedROMVersion) return false;
-	WORD levelNum = *LPWORD(&lData[4]);
-	currentOffset = 0x100;
-
-	// check properties of level before making any changes
-	while (currentOffset < lData.size()) {
-		DWORD addr = *LPDWORD(&lData[currentOffset]);
-		currentOffset += 4;
-		unsigned size = *LPDWORD(&lData[currentOffset]);
-		currentOffset += 4;
-
-		if (currentOffset + size > lData.size()) {
-			return false;
-		}
-
-		//memcpy(rom + snes2pc(addr), &lData[currentOffset], size);
-		currentOffset += size;
-	}
-
-	currentOffset = 0x100;
-	// load level
-	level = levelNum;
-	LoadLevel();
-
-	while (currentOffset < lData.size()) {
-		DWORD addr = *LPDWORD(&lData[currentOffset]);
-		currentOffset += 4;
-		unsigned size = *LPDWORD(&lData[currentOffset]);
-		currentOffset += 4;
-
-		if (currentOffset + size > lData.size()) return false;
-
-		if (addr < 0x800000) {
-			if (!expandedOffset[level].count(addr) || (expandedOffset[level][addr].second < size)) return false;
-			addr = pc2snes(expandedOffset[level][addr].first);
-		}
-
-		if ((addr >> 16) == eventBank) {
-			while (size > GetEventSize()) AddEvent(1, EventInfo());
-			while (size < GetEventSize()) DelEvent(1);
-			memcpy(rom + snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16)), &lData[currentOffset], size);
-		}
-		else {
-			memcpy(rom + snes2pc(addr), &lData[currentOffset], size);
-		}
-		currentOffset += size;
-	}
-
-	// reload the events
-
-	return true;
-}
+//bool SC4Core::LoadLevelFromFile(std::string fileName)
+//{
+//	if (!expandedROM)
+//		return false;
+//
+//	unsigned currentOffset = 0;
+//	std::vector<BYTE> lData;
+//
+//	// open file
+//	auto hLevelFile = CreateFile(fileName.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+//	if (!hLevelFile) {
+//		return false;
+//	}
+//	lData.resize(GetFileSize(hLevelFile, NULL));
+//	OVERLAPPED overlapped;
+//	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
+//	DWORD bytesR;
+//	if (!ReadFile(hLevelFile, &lData[0], lData.size(), &bytesR, &overlapped))
+//		return false;
+//	if (bytesR != lData.size())
+//		return false;
+//
+//	if (hLevelFile)
+//		CloseHandle(hLevelFile);
+//
+//	// check version
+//	if (*LPWORD(&lData[0]) != levelFormatVersion) return false;
+//	if (*LPWORD(&lData[2]) != expandedROMVersion) return false;
+//	WORD levelNum = *LPWORD(&lData[4]);
+//	currentOffset = 0x100;
+//
+//	// check properties of level before making any changes
+//	while (currentOffset < lData.size()) {
+//		DWORD addr = *LPDWORD(&lData[currentOffset]);
+//		currentOffset += 4;
+//		unsigned size = *LPDWORD(&lData[currentOffset]);
+//		currentOffset += 4;
+//
+//		if (currentOffset + size > lData.size()) {
+//			return false;
+//		}
+//
+//		//memcpy(rom + snes2pc(addr), &lData[currentOffset], size);
+//		currentOffset += size;
+//	}
+//
+//	currentOffset = 0x100;
+//	// load level
+//	level = levelNum;
+//	LoadLevel();
+//
+//	while (currentOffset < lData.size()) {
+//		DWORD addr = *LPDWORD(&lData[currentOffset]);
+//		currentOffset += 4;
+//		unsigned size = *LPDWORD(&lData[currentOffset]);
+//		currentOffset += 4;
+//
+//		if (currentOffset + size > lData.size()) return false;
+//
+//		if (addr < 0x800000) {
+//			if (!expandedOffset[level].count(addr) || (expandedOffset[level][addr].second < size)) return false;
+//			addr = pc2snes(expandedOffset[level][addr].first);
+//		}
+//
+//		if ((addr >> 16) == eventBank) {
+//			while (size > GetEventSize()) AddEvent(1, EventInfo());
+//			while (size < GetEventSize()) DelEvent(1);
+//			memcpy(rom + snes2pc(SReadWord(p_events[type] + level * 2) | (eventBank << 16)), &lData[currentOffset], size);
+//		}
+//		else {
+//			memcpy(rom + snes2pc(addr), &lData[currentOffset], size);
+//		}
+//		currentOffset += size;
+//	}
+//
+//	// reload the events
+//
+//	return true;
+//}
 
 bool SC4Core::SaveLevelToFile(std::string fileName)
 {

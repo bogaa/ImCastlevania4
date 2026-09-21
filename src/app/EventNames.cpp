@@ -178,14 +178,15 @@ const char* EventDisplayName(const SC4Core& core, const EventInfo& event)
         }
     }
 
-    if (core.type == 2 && event.type == EVENT_TYPE_SPECIAL) {
-        switch (event.eventId) {
-        case 0x02: return "Dynamic tiles";
-        case 0x03: return "Dynamic palette";
-        case 0x08: return "Tile decompression";
-        default: break;
-        }
-    }
+    // gradius 3 or MMX??
+    //if (core.type == 2 && event.type == EVENT_TYPE_SPECIAL) {
+    //    switch (event.eventId) {
+    //    case 0x02: return "Dynamic tiles";
+    //    case 0x03: return "Dynamic palette";
+    //    case 0x08: return "Tile decompression";
+    //    default: break;
+    //    }
+    //}
 
     if (const char* name = LookupName(kEventNames, std::size(kEventNames), event.eventId)) {
         return name;
