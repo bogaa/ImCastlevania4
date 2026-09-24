@@ -28,6 +28,7 @@ struct EditorState {
     uint16_t selectedTile = 0;
     uint16_t selectedBehaviorTile = 0;
     std::vector<uint16_t> selectedBehaviorTiles;
+    int customBehavior = 0xCA;
     int blockBrushWidth = 1;
     int blockBrushHeight = 1;
     std::vector<uint16_t> blockBrush;

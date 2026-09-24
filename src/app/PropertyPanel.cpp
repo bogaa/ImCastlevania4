@@ -58,6 +58,9 @@ namespace {
     static constexpr unsigned EVENT_DEATH_MOVBITS_BASE = 0x81AE80;
     static constexpr unsigned EVENT_DAMAGE_BASE = 0x81af00;
     static constexpr unsigned EVENT_SLOT_SIZE = 0x81AA80;
+    static constexpr unsigned RING_CONVEYOR_X = 0x81fcbe;
+    static constexpr unsigned RING_CONVEYOR_Y = 0x81fcc0;
+
 
     // expansion 
     static constexpr unsigned EXP_LEVEL_TRANSIT = 0xA0C000;         // AA BB    AA = level BB = checkpoint. 8 Enteries
@@ -148,7 +151,7 @@ namespace {
         int value = canEdit ? static_cast<int>(session.ReadRom(addresses.front(), byteCount)) : 0;
     
         ImGui::BeginDisabled(!canEdit);
-        const float valueWidth = byteCount == 1 ? 96.0f : byteCount == 2 ? 124.0f : 196.0f;
+        const float valueWidth = byteCount == 1 ? 96.0f : byteCount == 2 ? 112.0f : 124.0f;
         BeginPropertyRow(label, valueWidth);
 
         if (ImGui::InputInt("##value", &value, 1, 8, ImGuiInputTextFlags_AutoSelectAll)) {
@@ -166,6 +169,36 @@ namespace {
         EndPropertyRow();
         ImGui::EndDisabled();
     }
+
+        static void DrawNumberPropertySliderHex(EditorState& state, const char* label, int byteCount, const std::vector<unsigned>& addresses, int minValue, int maxValue, bool enabled = true)
+        {
+            RomSession& session = state.session;
+            const bool canEdit = session.IsLoaded() && enabled && !addresses.empty() && addresses.front() != 0;
+            int value = canEdit ? static_cast<int>(session.ReadRom(addresses.front(), byteCount)) : minValue;
+            value = std::clamp(value, minValue, maxValue);
+
+            ImGui::BeginDisabled(!canEdit);
+            const float valueWidth = byteCount == 1 ? 192.0f : byteCount == 2 ? 264.0f : 336.0f;
+            BeginPropertyRow(label, valueWidth);
+
+            const char* valueFormat = byteCount == 1 ? "%02X" : byteCount == 2 ? "%04X" : "%08X";
+            if (ImGui::SliderInt("##value", &value, minValue, maxValue, valueFormat)) {
+                const unsigned mask = byteCount == 1 ? 0xFFu : byteCount == 2 ? 0xFFFFu : 0xFFFFFFFFu;
+                session.WriteRomAll(addresses, byteCount, static_cast<unsigned>(value) & mask);
+                state.levelRenderer.Invalidate();
+            }
+            if (ImGui::IsItemHovered() && !addresses.empty()) {
+                if (addresses.size() == 1) {
+                    ImGui::SetTooltip("ROM address: %06X", addresses.front());
+                }
+                else {
+                    ImGui::SetTooltip("Writes %zu mirrored ROM addresses", addresses.size());
+                }
+            }
+            EndPropertyRow();
+            ImGui::EndDisabled();
+        }
+
 
     static void DrawNumberPropertySlider(EditorState& state, const char* label, int byteCount, const std::vector<unsigned>& addresses, int minValue, int maxValue, bool enabled = true)
     {
@@ -894,12 +927,653 @@ namespace {
                 }        
             
             }
-                   
+            
+            if (event->eventId == 0x3) {
+                
+                
+                    if (event->eventSubId == 0x1) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4}, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4}, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81fcf2 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81fcf4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81fcf6 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81fcf8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81fcfa }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81fcfc }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81fcfe }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81fd00 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81fd02 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81fd04 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81fd06 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81fd08 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81fd0a }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81fd0c }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81fd0e }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81fd10 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81fd12 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81fd14 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81fd16 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81fd18 }, 0x0, 0xFFFF, true);
+                    }
+
+                    if (event->eventSubId == 0x2) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FD1C }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FD1C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FD1E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FD20 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FD22 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FD24 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FD26 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FD28 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FD2A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FD2C }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FD2E }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FD30 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FD32 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FD34 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FD36 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FD38 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FD3A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FD3C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FD3E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FD40 }, 0x0, 0xFFFF, true);
+                    }                                                               
+
+                    if (event->eventSubId == 0x3) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FD50 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FD52 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FD54 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FD56 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FD58 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FD5A }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FD5C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FD5E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FD60 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FD62 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FD64 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FD66 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FD68 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FD6A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FD6C }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FD6E }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FD70 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FD72 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FD74 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FD76 }, 0x0, 0xFFFF, true);
+                    }
+
+                    if (event->eventSubId == 0x4) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FD7A }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FD7C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FD7E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FD80 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FD82 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FD84 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FD86 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FD88 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FD8A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FD8C }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FD8E }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FD90 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FD92 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FD94 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FD96 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FD98 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FD9A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FD9C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FD9E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FDA0 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P5 Timer  ", 2, { 0x81FDA2 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpdSub", 2, { 0x81FDA4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpd   ", 2, { 0x81FDA6 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpdSub", 2, { 0x81FDA8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpd   ", 2, { 0x81FDAA }, 0x0, 0xFFFF, true);
+                    }
+
+                    if (event->eventSubId == 0x5) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FDAE }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FDB0 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FDB2 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FDB4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FDB6 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FDB8 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FDBA }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FDBC }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FDBE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FDC0 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FDC2 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FDC4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FDC6 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FDC8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FDCA }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FDCC }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FDCE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FDD0 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FDD2 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FDD4 }, 0x0, 0xFFFF, true);
+                    }
+
+                    if (event->eventSubId == 0x6) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FDD8 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FDDA }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FDDC }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FDDE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FDE0 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FDE2 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FDE4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FDE6 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FDE8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FDEA }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FDEC }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FDEE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FDF0 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FDF2 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FDF4 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FDF6 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FDF8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FDFA }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FDFC }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FDFE }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P5 Timer  ", 2, { 0x81FC00 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpdSub", 2, { 0x81FC02 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpd   ", 2, { 0x81FC06 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpdSub", 2, { 0x81FC08 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpd   ", 2, { 0x81FC0A }, 0x0, 0xFFFF, true);
+                    }
+
+                    if (event->eventSubId == 0x7) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FE0C }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FE0E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FE10 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FE12 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FE14 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FE16 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FE18 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FE1A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FE1C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FE1E }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FE20 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FE22 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FE24 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FE26 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FE28 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FE2A }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FE2C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FE2E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FE30 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FE32 }, 0x0, 0xFFFF, true);
+                    }                                                             
+            
+                    if (event->eventSubId == 0x8) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FE36 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FE38 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FE3A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FE3C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FE3E }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FE40 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FE42 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FE44 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FE46 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FE48 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FE4A }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FE4C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FE4E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FE50 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FE52 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FE54 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FE56 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FE58 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FE5A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FE5C }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P5 Timer  ", 2, { 0x81FE5E }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpdSub", 2, { 0x81FE60 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpd   ", 2, { 0x81FE62 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpdSub", 2, { 0x81FE64 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpd   ", 2, { 0x81FE66 }, 0x0, 0xFFFF, true);
+                    }                                                               
+                  
+                    if (event->eventSubId == 0x9) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FE6A }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FE6C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FE6E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FE70 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FE72 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FE74 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FE76 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FE78 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FE7A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FE7C }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FE7E }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FE80 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FE82 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FE84 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FE86 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FE88 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FE8A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FE8C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FE8E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FE90 }, 0x0, 0xFFFF, true);
+                    }
+
+                    if (event->eventSubId == 0xA) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FE94 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FE96 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FE98 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FE9A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FE9C }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FE9E }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FEA0 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FEA2 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FEA4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FEA6 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FEA8 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FEAA }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FEAC }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FEAE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FEB0 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FEB2 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FEB4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FEB6 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FEB8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FEBA }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P5 Timer  ", 2, { 0x81FEBC }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpdSub", 2, { 0x81FEBE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpd   ", 2, { 0x81FEC0 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpdSub", 2, { 0x81FEC2 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpd   ", 2, { 0x81FEC4 }, 0x0, 0xFFFF, true);
+                    }                                                              
+
+                    if (event->eventSubId == 0xB) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FEC8 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FECA }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FECC }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FECE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FED0 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FED2 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FED4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FED6 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FED8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FEDA }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FEDC }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FEDE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FEE0 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FEE2 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FEE4 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FEE6 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FEE8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FEEA }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FEEC }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FEEE }, 0x0, 0xFFFF, true);
+                    }
+
+                    if (event->eventSubId == 0xC) {
+                        DrawNumberPropertySliderHex(state, "P1 xPos   ", 2, { RING_CONVEYOR_X + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        DrawNumberPropertySliderHex(state, "P1 yPos   ", 2, { RING_CONVEYOR_Y + event->eventSubId * 4 }, 0x0, 0x07FF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81FEF2 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81FEF4 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81FEF6 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81FEF8 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81FEFA }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81FEFC }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81FEFE }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81FF00 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81FF02 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81FF04 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81FF06 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81FF08 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81FF0A }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81FF0C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81FF0E }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81FF10 }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81FF12 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81FF14 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81FF16 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81FF18 }, 0x0, 0xFFFF, true);
+                        ImGui::Separator();
+                        DrawNumberPropertySliderHex(state, "P5 Timer  ", 2, { 0x81FF1A }, 0x0, 0xFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpdSub", 2, { 0x81FF1C }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 xSpd   ", 2, { 0x81FF1E }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpdSub", 2, { 0x81FF20 }, 0x0, 0xFFFF, true);
+                        DrawNumberPropertySliderHex(state, "P5 ySpd   ", 2, { 0x81FF22 }, 0x0, 0xFFFF, true);
+                    }                                                             
+            }
+
+            if (event->eventId == 0x17) {
+
+                if (event->eventSubId == 0x0) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c1d3 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c1d5 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c1d7 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c1d9 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c1db }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c1dd }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c1df }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c1e1 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c1e3 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c1e5 }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x1) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c1e9 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c1eb }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c1ed }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c1ef }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c1f1 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c1f3 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c1f5 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c1f7 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c1f9 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c1fb }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x2) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c1ff }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c201 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c203 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c205 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c207 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c209 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c20b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c20d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c20f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c211 }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x3) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c215 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c217 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c219 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c21b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c21d }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c21f }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c221 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c223 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c225 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c227 }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x4) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c22b }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c22d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c22f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c231 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c233 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c235 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c237 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c239 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c23b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c23d }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x5) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c241 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c243 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c245 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c247 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c249 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c24b }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c24d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c24f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c251 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c253 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81c255 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81c257 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81c259 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81c25b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81c25d }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x6) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c261 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c263 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c265 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c267 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c269 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c26b }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c26d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c26f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c271 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c273 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P3 Timer  ", 2, { 0x81c275 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81c277 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpd   ", 2, { 0x81c279 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81c27b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpd   ", 2, { 0x81c27d }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P4 Timer  ", 2, { 0x81c27f }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P4 xSpdSub", 2, { 0x81c281 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P4 xSpd   ", 2, { 0x81c283 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P4 ySpdSub", 2, { 0x81c285 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P4 ySpd   ", 2, { 0x81c287 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P5 FFFF ends table here", 2, { 0x81c289 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P5 xSpdSub", 2, { 0x81c28b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P5 xSpd   ", 2, { 0x81c28d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P5 ySpdSub", 2, { 0x81c28f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P5 ySpd   ", 2, { 0x81c291 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P6 Timer  ", 2, { 0x81c293 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P6 THE END!", 2, { 0x81c295 }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x7) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c297 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c299 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c29b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c29d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c29f }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c2a1 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c2a3 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c2a5 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c2a7 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c2a9 }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x8) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c2ad }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c2ae }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c2b1 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c2b3 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c2b5 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c2b7 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c2b9 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c2bb }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c2bd }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c2bf }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x9) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81c2c3 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c2c5 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81c2c7 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c2c9 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81c2cb }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81c2cd }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c2cf }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81c2d1 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c2d3 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81c2d5 }, 0x0, 0xFFFF, true);
+                }
+            }
+
             if (event->eventId == 0x2F) {
                 if (ImGui::CollapsingHeader("Choose Droped Item ID", ImGuiTreeNodeFlags_DefaultOpen)) {
                    DrawNumberProperty(state, "Breakable Wall Item", 1, { EVENT_BREAKABLE_WALL_ITEM_BASE + ((event->eventSubId) & 0x0F) });
                     
                 }
+            }
+            
+            if (event->eventId == 0x62) {
+                if (event->eventSubId == 0x0) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer", 2,   { 0x81fc1c }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81fc1e }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd", 2,    { 0x81fc20 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81fc22 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd", 2,    { 0x81fc24 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer", 2,   { 0x81fc26 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81fc28 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd", 2,    { 0x81fc2a }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81fc2c }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd", 2,    { 0x81fc2e }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x1) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81fc32 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81fc34 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81fc36 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81fc38 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81fc3a }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81fc3c }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81fc3e }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81fc40 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81fc42 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81fc44 }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x2) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81fc48 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81fc4a }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81fc4c }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81fc4e }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81fc50 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81fc52 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81fc54 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81fc56 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81fc58 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81fc5A }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x3) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81fc5e }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81fc60 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81fc62 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81fc64 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81fc66 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81fc68 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81fc6a }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81fc6c }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81fc6e }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81fc70 }, 0x0, 0xFFFF, true);
+                }
+                
+                if (event->eventSubId == 0x4) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81fc74 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81fc76 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81fc78 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81fc7a }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81fc7c }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81fc7e }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81fc80 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81fc82 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81fc84 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81fc86 }, 0x0, 0xFFFF, true);
+                }
+
+                if (event->eventSubId == 0x5) {
+                    DrawNumberPropertySliderHex(state, "P1 Timer  ", 2, { 0x81fc8a }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81fc8c }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd   ", 2, { 0x81fc8e }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81fc90 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd   ", 2, { 0x81fc92 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer  ", 2, { 0x81fc94 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81fc96 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd   ", 2, { 0x81fc98 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81fc9a }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd   ", 2, { 0x81fc9c }, 0x0, 0xFFFF, true);
+                }
+                
+
+
             }
             
             const bool expanded = state.session.IsExpandedRom();

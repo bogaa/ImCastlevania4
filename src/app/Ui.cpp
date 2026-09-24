@@ -2783,6 +2783,7 @@ static void DrawHelpView(EditorState& state)
             "The Selection tab gives you extra options when you click on events like. Exits, CamLock, breakable walls etc.",
             "Use File > Save or Ctrl+S after editing. Save As writes the current ROM to a different path.",
             "Use View > Reset Default Layout if panels are missing or docked somewhere awkward."
+            "When you see a slider but had like to type. Use CRTL + Mouseclick."
         });
     }
 

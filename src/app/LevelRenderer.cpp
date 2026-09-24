@@ -625,6 +625,7 @@ bool LevelRenderer::EnsureTexture(ID3D11Device* device, RomSession& session)
     return SUCCEEDED(result);
 }
 
+// level view 
 void LevelRenderer::Draw(ImVec2 available, EditorState& state)
 {
     if (!textureView_) {
@@ -775,8 +776,11 @@ void LevelRenderer::DrawCameraBoxOverlay(EditorState& state, ImDrawList* drawLis
     drawList->AddText(labelPos, IM_COL32(255, 245, 170, 255), label);
 }
 
+// tools
 bool LevelRenderer::DrawBlockPalette(RomSession& session, uint16_t* selectedBlock)
 {
+    
+    // draw scene
     if (!session.IsLoaded() || !selectedBlock) {
         ImGui::TextUnformatted("Open a ROM to browse level blocks.");
         return false;
@@ -851,6 +855,8 @@ bool LevelRenderer::DrawBlockPalette(RomSession& session, uint16_t* selectedBloc
     return selectionChanged;
 }
 
+
+// Tile32
 void LevelRenderer::DrawBlockEditor(EditorState& state)
 {
     if (!state.session.IsLoaded()) {
@@ -1111,6 +1117,7 @@ void LevelRenderer::DrawBlockEditor(EditorState& state)
     ImGui::EndChild();
 }
 
+// Collusions
 void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
 {
     if (!state.session.IsLoaded()) {
@@ -1154,20 +1161,20 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
         ImGui::Separator();
     }
 
-    ImGui::TextUnformatted("Properties");
-    int tileValue = state.selectedBehaviorTile;
-    ImGui::SetNextItemWidth(100.0f);
-    if (ImGui::InputInt("Tile ID", &tileValue, 1, 10, ImGuiInputTextFlags_AutoSelectAll)) {
-        selectOnly(static_cast<uint16_t>(std::clamp(tileValue, 0, static_cast<int>(tileCount) - 1)));
-    }
-    ImGui::SameLine();
-    ImGui::TextDisabled("%u selected", static_cast<unsigned>(state.selectedBehaviorTiles.size()));
+    //ImGui::TextUnformatted("Properties");
+    //int tileValue = state.selectedBehaviorTile;   //Just select with mouse?
+    //ImGui::SetNextItemWidth(100.0f);
+    //if (ImGui::InputInt("Tile ID", &tileValue, 1, 10, ImGuiInputTextFlags_AutoSelectAll)) {
+    //    selectOnly(static_cast<uint16_t>(std::clamp(tileValue, 0, static_cast<int>(tileCount) - 1)));
+    //}
+    //ImGui::SameLine();
+    //ImGui::TextDisabled("%u selected", static_cast<unsigned>(state.selectedBehaviorTiles.size()));
 
     if (!core.isMode7()) {
-        ImGui::SameLine();
+    //    ImGui::SameLine();
         int palette = static_cast<int>(state.tilePaletteId & 0x7);
         ImGui::SetNextItemWidth(90.0f);
-        if (ImGui::InputInt("Palette ID", &palette)) {
+        if (ImGui::InputInt("Select a palette", &palette)) {
             state.tilePaletteId = static_cast<unsigned>(std::clamp(palette, 0, 7));
         }
     }
@@ -1195,7 +1202,7 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
                 continue;
             }
             char label[64] = {};
-            std::snprintf(label, sizeof(label), "%u  %s", type & 0xFF, name.c_str());
+            std::snprintf(label, sizeof(label), "%X  %s", type & 0xFF, name.c_str());
             const bool selected = !mixedBehavior && firstBehavior == type;
             if (ImGui::Selectable(label, selected)) {
                 applyBehavior(static_cast<WORD>(type));
@@ -1207,22 +1214,33 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
         ImGui::EndCombo();
     }
     ImGui::SameLine();
-    if (ImGui::Button("Platform (FG)")) {
+    if (ImGui::Button("Solid FG")) {
         applyBehavior(0xCA);
     }
     ImGui::SameLine();
-    if (ImGui::Button("Step (FG)")) {
-        applyBehavior(0xCC);
+    if (ImGui::Button("Stair FG")) {
+        applyBehavior(0xE0);
     }
     ImGui::SameLine();
     if (ImGui::Button("Background")) {
         applyBehavior(0xE4);
     }
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(120.0f);
+    if (ImGui::InputInt("##custom-behavior", &state.customBehavior, 2, 0x10,
+        ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
+        state.customBehavior = std::clamp(state.customBehavior, 0, 0xFE);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Costum")) {
+        applyBehavior(static_cast<WORD>(state.customBehavior));
+    }
+    
     if (!core.expandedROM) {
         ImGui::EndDisabled();
     }
 
-    ImGui::Text("Level table: %s", core.expandedROM ? "expanded per-tile table" : "original threshold table");
+    ImGui::Text("Level table: %s", core.expandedROM ? "expanded tile lookup-table" : "original tile index-table");
     if (core.expandedROM && state.selectedBehaviorTiles.size() == 1) {
         const unsigned behaviorAddress = 0xA28000 + (core.level % 0x20) * 0x400 + (core.level / 0x20) * 0x8000 + state.selectedBehaviorTiles.front();
         ImGui::SameLine();
@@ -1261,6 +1279,7 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
     drawList->PushClipRect(ImGui::GetWindowPos(), ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y), true);
     for (unsigned tile = 0; tile < tileCount; ++tile) {
         ImGui::PushID(static_cast<int>(tile));
+        const WORD behavior = core.GetTileType(static_cast<WORD>(tile));
         if (tile > 0 && (tile % static_cast<unsigned>(columns)) != 0) {
             ImGui::SameLine();
         }
@@ -1290,7 +1309,6 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
             }
         }
         if (ImGui::IsItemHovered()) {
-            const WORD behavior = core.GetTileType(static_cast<WORD>(tile));
             const auto nameIt = TileTypeMap.find(behavior);
             ImGui::SetTooltip("Tile %u\n%s %u", tile, nameIt != TileTypeMap.end() ? nameIt->second.c_str() : "Type", behavior & 0xFF);
         }
@@ -1301,13 +1319,17 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
                 | (core.isMode7() ? 0 : ((state.tilePaletteId & 0xf) << 10)));
             drawList->AddRectFilled(tileMin, ImVec2(tileMin.x + tileCellSize, tileMin.y + tileCellSize), IM_COL32(10, 12, 14, 255));
             DrawTilePreview(core, drawList, ImVec2(tileMin.x + 5.0f, tileMin.y + 5.0f), map, 4.0f);
+            if (behavior != 0 && behavior != 0xC8 && behavior != 0xE4) {
+                drawList->AddRectFilled(tileMin, ImVec2(tileMin.x + tileCellSize, tileMin.y + tileCellSize), CollisionColor(behavior));
+            }
             drawList->AddRect(tileMin, ImVec2(tileMin.x + tileCellSize, tileMin.y + tileCellSize), selected ? IM_COL32(255, 235, 120, 255) : IM_COL32(72, 82, 88, 190), 0.0f, 0, selected ? 2.0f : 1.0f);
         }
         ImGui::PopID();
     }
     drawList->PopClipRect();
-    ImGui::EndChild();
-}
+   
+    ImGui::EndChild();  // end tile collusion editing
+}  
 
 bool LevelRenderer::CopyAvailableTilesToClipboard(HWND hwnd, RomSession& session, unsigned palette) const
 {
@@ -1675,17 +1697,23 @@ void LevelRenderer::DrawCollisionOverlay(SC4Core& core, ImDrawList* drawList, Im
             for (int blockY = 0; blockY < 8; ++blockY) {
                 for (int blockX = 0; blockX < 8; ++blockX) {
                     uint16_t block = *blockMap++;
-                    
-                    //if (core.type == 1) { FIXME check what DracX does 
-                    //    block = static_cast<WORD>(((block & 0x8000) >> 1) | ((block & 0x4000) << 1) | ((block & ~0xC000) >> 5));
-                    //} 
+
+                    if (core.type == 1) {
+                        block = static_cast<WORD>(((block & 0x8000) >> 1) | ((block & 0x4000) << 1) | ((block & ~0xC000) >> 5));
+                    } else if (core.type == 2) {
+                        block = static_cast<WORD>(((block & 0x0080) << 7) | (block & ~0xFF00));
+                    }
 
                     const unsigned blockOffset = GetBlockOffset(core, block);
+                    const bool flipX = (block & 0x8000) != 0;
+                    const bool flipY = (block & 0x4000) != 0;
                     const int baseTileX = sceneX * 32 + blockX * 4;
                     const int baseTileY = sceneY * 32 + blockY * 4;
                     for (int tileY = 0; tileY < 4; ++tileY) {
                         for (int tileX = 0; tileX < 4; ++tileX) {
-                            const unsigned tileOffset = (tileX << 1) + (tileY << 3);
+                            const int srcTileX = flipX ? 3 - tileX : tileX;
+                            const int srcTileY = flipY ? 3 - tileY : tileY;
+                            const unsigned tileOffset = (srcTileX << 1) + (srcTileY << 3);
                             const uint16_t tile = *reinterpret_cast<const uint16_t*>(core.ram + blockOffset + tileOffset);
                             const uint16_t tileIndex = tile & 0x3FF;
                             const uint16_t collisionType = core.GetTileType(tileIndex);
@@ -1700,7 +1728,7 @@ void LevelRenderer::DrawCollisionOverlay(SC4Core& core, ImDrawList* drawList, Im
                             drawList->AddRectFilled(a, b, CollisionColor(collisionType));
                             if (zoom >= 1.6f) {
                                 char text[4] = {};
-                                std::snprintf(text, sizeof(text), "%u", collisionType & 0xFF);
+                                std::snprintf(text, sizeof(text), "%X", collisionType & 0xFF);
                                 drawList->AddText(ImVec2(a.x + 1.0f, a.y + 1.0f), IM_COL32(15, 15, 15, 235), text);
                                 drawList->AddText(a, IM_COL32(255, 245, 160, 255), text);
                             }
@@ -2213,24 +2241,39 @@ EventInfo* LevelRenderer::EventByIndex(SC4Core& core, int eventIndex) const
 ImU32 LevelRenderer::CollisionColor(uint16_t collisionType) const
 {
     switch (collisionType) {
-    case 0xCA:
-    case 0xCE:
-    case 0xD0:
-        return IM_COL32(70, 150, 255, 90);
-    case 0xCC:
-    case 0xE0:
-        return IM_COL32(255, 205, 80, 95);
-    case 0xDA:
-    case 0xDC:
-    case 0xDE:
-    case 0xD8:
-        return IM_COL32(125, 230, 125, 95);
-    case 0xE2:
-        return IM_COL32(255, 70, 75, 120);
-    case 0xE4:
-        return IM_COL32(155, 120, 255, 80);
+    case 0xCC:                              // stair FG 
+        return IM_COL32(0, 50, 200, 130);
+    case 0xCA:                              // platforms FG
+        return IM_COL32(0, 0, 255, 130);
+    case 0xD0:                               // platforms half
+        return IM_COL32(180, 150, 50, 130);
+    case 0xD8:  // slope hi  
+        return IM_COL32(220, 90, 40, 130);
+    case 0xDA:  // slope steep hi   
+        return IM_COL32(90, 180, 40, 130);
+    case 0xDC:  // slope 
+        return IM_COL32(180, 90, 40, 130);
+    case 0xDE:  // slope steep
+        return IM_COL32(130, 180, 40, 130);
+
+    case 0xE2:  // spike 
+        return IM_COL32(255, 0, 0, 130);
+    case 0xD4:  // mud 
+        return IM_COL32(255, 80, 80, 130);
+    
+    case 0xCE:  // round corner
+        return IM_COL32(0, 0, 100, 130);
+    case 0xE0:  // stair BG
+        return IM_COL32(0, 50, 100, 130);
+    case 0xD2:  // ??
+    case 0xD6:  // ??
+        return IM_COL32(0, 255, 255, 255);
+    
+    case 0xC8:  // c8 emtpy 
+    case 0xE4:  // background empty
+        return IM_COL32(70, 150, 255, 100);
     default:
-        return IM_COL32(255, 120, 190, 80);
+        return IM_COL32(80, 0, 80, 100);
     }
 }
 

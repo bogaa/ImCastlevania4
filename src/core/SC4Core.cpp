@@ -143,18 +143,18 @@ const long p_bblocks[2] = { NULL, NULL };
 std::map<unsigned, std::string> TileTypeMap = {
 	{ 0x00, "All" },
 	{ 0xC8, "Empty" },
-	{ 0xCA, "Platform(FG?)" },
-	{ 0xCC, "Step(FG?)" },
-	{ 0xCE, "Platform(BG?)" },
-	{ 0xD0, "Platform Half Height" },
-	{ 0xD2, "Oneway Platform" },					// level 24 special?
-	{ 0xD4, "Mud/Slime/Blood" },
-	{ 0xD6, "?????" },
-	{ 0xD8, "Slope 15deg Change (gold pile)" },
-	{ 0xDA, "Slope 30deg Low (2-1-1)" },			// platform rounded edge?
-	{ 0xDC, "Slope 15deg Straight (gold pile)" },
-	{ 0xDE, "Slope 30deg High (2-1-1)" },
-	{ 0xE0, "Step(BG?)" },
+	{ 0xCA, "Solid FG" },
+	{ 0xCC, "Stair BG" },
+	{ 0xCE, "Round Corner (Or solid BG)" },
+	{ 0xD0, "Half Height Solid" },
+	{ 0xD2, "??" },					// level 24 special? Oneway Platform?
+	{ 0xD4, "Quick Sand" },
+	{ 0xD6, "??" },
+	{ 0xD8, "Slope hi ->" },
+	{ 0xDA, "Slope hi <-" },	    // platform rounded edge?
+	{ 0xDC, "Slope lo ->"},
+	{ 0xDE, "Slope lo <-" },
+	{ 0xE0, "Stair FG" },
 	{ 0xE2, "Spike" },
 	{ 0xE4, "Background" },
 };	
