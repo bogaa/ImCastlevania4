@@ -12,6 +12,7 @@ struct EventName {
 };
 
 static const EventName kEventNames[] = {
+    { 0x00, " " },  
     { 0x01, "Fire" },
     { 0x02, "Bone" },
     { 0x03, "Ring" },
@@ -161,12 +162,12 @@ static const char* LookupName(const EventName* names, size_t count, unsigned id)
 
 const char* EventTypeDisplayName(unsigned type)
 {
-    switch (type) {
-    case EVENT_TYPE_ENEMY: return "Enemy";
-    case EVENT_TYPE_CANDLE: return "Candle";
-    case EVENT_TYPE_OBJECT: return "Object";
-    case EVENT_TYPE_SPECIAL: return "NotUsed";
-    default: return "Unknown";
+    switch (type) { 
+     case EVENT_TYPE_ENEMY: return "Enemy";    
+     case EVENT_TYPE_CANDLE: return "Candle";
+     case EVENT_TYPE_OBJECT: return "Object";
+     case EVENT_TYPE_SPECIAL: return "NotUsed";
+    default: return "unknown"; 
     }
 }
 

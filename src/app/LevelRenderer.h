@@ -18,7 +18,8 @@ class SC4Core;
 class LevelRenderer {
 public:
     ~LevelRenderer();
-
+    
+    //bool showEventNames() = true;
     void Invalidate();
     bool EnsureTexture(ID3D11Device* device, RomSession& session);
     void Draw(ImVec2 available, EditorState& state);

@@ -577,6 +577,26 @@ namespace {
         case 0x12: return 0x8AF4;
         case 0x16: return 0xA682;
         case 0x17: return 0xA6EF;
+        
+        // items, this will make it show up as enemy as well.. what makes it look messy 
+        // case 0x18: return 0x816D;
+        // case 0x19: return 0x8172;
+        // case 0x1a: return 0x814A;
+        // case 0x1b: return 0x814F;
+        // case 0x1c: return 0x8154;
+        // case 0x1d: return 0x815E;
+        // case 0x1e: return 0x8168;
+        // case 0x1f: return 0x8177;
+        // case 0x20: return 0x817C;
+        // case 0x21: return 0x8181;
+        // case 0x22: return 0x8186;
+        // case 0x23: return 0x818B;
+        // case 0x24: return 0x8190;
+        // case 0x25: return 0x8195;
+        // case 0x26: return 0x819A;
+        // case 0x27: return 0x819F;
+        // case 0x28: return 0x81A9;
+
         case 0x2A: return 0xAD7D;
         case 0x2C: return 0x99EE;
         case 0x30: return 0x8DEF;
@@ -605,8 +625,8 @@ namespace {
         case 0x52: return 0x8F5C;
         case 0x53: return 0x814F;
         case 0x54: return 0x9226;
-        case 0x56: return 0x919D;
-        case 0x57: return 0x9387;
+        case 0x56: return 0x919D; 
+        case 0x57: return 0x9387; 
         case 0x58: return 0x92FB;
         case 0x59: return 0x9390;
         case 0x5A: return 0x8E41;
@@ -618,7 +638,7 @@ namespace {
         case 0x61: return 0xA85B;
         case 0x62: return 0xA84A;
         case 0x64: return 0xA869;
-        case 0x66: return 0xE07C;
+        case 0x66: return 0xD9C4;
         case 0x69: return 0x9470;
         case 0x6B: return 0x8D50;
         case 0x6C: return 0xA87F;
@@ -637,7 +657,7 @@ namespace {
         case 0x7B: return 0x8B66;
         case 0x7E: return 0x95EB;
         case 0x7F: return 0x9B59;
-        default: return 0;
+        default: break;
         }
     
         if (event.eventId == 0x06) {
@@ -646,7 +666,7 @@ namespace {
             case 0x01: return 0xA7F0;
             case 0x02: return 0xA7F9;
             case 0x03: return 0xA5A5;
-            default: return 0;
+            default: break;
             }
         }
         if (event.eventId == 0x2E) {
@@ -654,7 +674,7 @@ namespace {
             case 0x00: return 0xA507;
             case 0x01:
             case 0x02: return 0xE1E4;
-            default: return 0;
+            default: break;
             }
         }
         if (event.eventId == 0x68) {
@@ -739,33 +759,149 @@ namespace {
             return true;
         }
 
-        //if (event.eventId == 0x38) {
-        //    slotOffset = 0x6A00u;       // autospawner needs to use a spriteID present in the level.. the piller might use a hardcoded slot.. need to check again and make a list.
-        //    return true;
-        //}
+        unsigned int event_2_eva = event.eventId & 0xFF;   
+        // group eventIDs with same GFX slot
+        
+        if (event.eventId == 0x38) {        // autospawner sprites
+            switch (event.eventSubId & 0xFF) {
+            case 0x00:
+            event_2_eva = 0x39;   // pillar    
+            break;
+            case 0x01:
+            event_2_eva = 0x07;    // Medusa   
+            break;
+            case 0x02:
+            event_2_eva = 0x07;    // Medusa     
+            break;
+            case 0x03:
+            event_2_eva = 0x54;    // Zombie 
+            break;
+            case 0x04:
+            event_2_eva = 0x51;    // fishmanSpit 
+            break;
+            case 0x05:
+            event_2_eva = 0x51;    // fishmanJump   
+            break;
+            case 0x06:
+            event_2_eva = 0x07;    // spawn_7Medusas
+            break;
+            case 0x07:
+            event_2_eva = 0x58;    // eagles   
+            break;
+            case 0x08:
+            event_2_eva = 0x66;    // grabingHand   
+            break;
+            case 0x09:
+            event_2_eva = 0x0c;    // bat   
+            break;
+            case 0x0a:
+            event_2_eva = 0x67;    // not working     
+            break;           
+            case 0x0b:
+            event_2_eva = 0x0b;    // graveDigger   
+            break;
+            default: 
+            break;
+            }
+        }
+       
+        switch (event.eventId & 0xFF) {
+        case 0x01:
+            event_2_eva = 0x0b;   // pillar    
+            break;
+        case 0x11:
+        case 0x12:       
+            event_2_eva = 0x12;   // skellys   
+            break;
+        case 0x4e:
+            event_2_eva = 0x0c;   // hanging bat  
+        case 0x4f:
+        case 0x50:
+        case 0x51:
+            event_2_eva = 0x4c;   // fishman 
+            break;
+        case 0x57:
+            event_2_eva = 0x58;   // harpies    
+            break;
+        //case 0x14:
+        //    event_2_eva = 0x2e;   // moon bats   
+        //    break;
+        case 0x18: // items
+        case 0x19:
+        case 0x1a:
+        case 0x1b:
+        case 0x1c:
+        case 0x1d:
+        case 0x1e:
+        case 0x1f:
+        case 0x20:
+        case 0x21:
+        case 0x22:
+        case 0x23:
+        case 0x24:
+        case 0x25:
+        case 0x26:
+        case 0x27:
+        case 0x28:
+        case 0x0e:                  // candle
+        case 0x53:                  // axe of knight  
+            slotOffset = 0;        
+            return true;
+        default:
+            break;
+        }
 
-        const unsigned gfxOffset = ReadWordAt(core, SPRITE_IDENTIFIER + 3 * (event.eventId & 0xFF));
-        const unsigned levelOffset = ReadWordAt(core, ENEMY_SET_GFX + 2 * core.level);
-        const unsigned spriteLoadPc = SNESCore::snes2pc(static_cast<int>(0x860000 + levelOffset));
-        if (!gfxOffset || !CanReadRom(core, spriteLoadPc, 1)) {
+        // Just add slot number of current event loaded in order.     
+        unsigned int tablePointer = (ReadWordAt(core, (0x868BCD + 2 * core.level)) | 0x860000);
+        unsigned int tableSize = ReadByteAt(core, tablePointer);                    // first bytes = size
+        unsigned int index_ID_ta = 0;
+        unsigned int sloted_ID = 0;
+        unsigned int slotSize = 0; 
+        unsigned int slotNum = 0;
+        
+        tableSize++;
+        for (tableSize != 0; --tableSize;) {
+            index_ID_ta++;
+            
+            sloted_ID = ReadByteAt(core, tablePointer + index_ID_ta);
+            if (sloted_ID == event_2_eva) {                          
+                slotOffset = ReadWordAt(core, 0x81A8D4 + slotNum * 2);
+                return true;                                                       // current event is in this slot so we can return. 
+            }
+            slotSize = ReadByteAt(core, 0x81AA80 + sloted_ID);
+            if (slotSize != 0xFF) {
+                slotNum += slotSize;                                               // only cont event with GFXslot content 
+            } 
+        }                                                                      
+
+        if (tableSize == 0) {
             return false;
         }
+
+        //// This emulates what SC4 does in game 
+        //const unsigned gfxOffset = ReadWordAt(core, SPRITE_IDENTIFIER + 3 * (event.eventId & 0xFF));
+        //const unsigned levelOffset = ReadWordAt(core, ENEMY_SET_GFX + 2 * core.level);
+        //const unsigned spriteLoadPc = SNESCore::snes2pc(static_cast<int>(0x860000 + levelOffset));
+        //if (!gfxOffset || !CanReadRom(core, spriteLoadPc, 1)) {
+        //    return false;
+        //}
+        //
+        //const BYTE* spriteLoad = core.rom + spriteLoadPc;
+        //const unsigned count = *spriteLoad++;
+        //unsigned slotNum = 0;
+        //for (unsigned i = 0; i < count && CanReadRom(core, static_cast<unsigned>(spriteLoad - core.rom), 1); ++i) {
+        //    const unsigned index = *spriteLoad++;
+        //    const unsigned spriteCount = ReadByteAt(core, EV_SPRITE_SLOT_COUNT + index);
+        //    const unsigned currentGfxOffset = ReadWordAt(core, SPRITE_IDENTIFIER + 3 * index);
+        //    if (gfxOffset == currentGfxOffset) {
+        //        slotOffset = ReadWordAt(core, 0x819534 + 0x13A0 + 2 * slotNum);
+        //        return true;
+        //    }
+        //    slotNum += spriteCount;
+        //}
+        //return false;
     
-        const BYTE* spriteLoad = core.rom + spriteLoadPc;
-        const unsigned count = *spriteLoad++;
-        unsigned slotNum = 0;
-        for (unsigned i = 0; i < count && CanReadRom(core, static_cast<unsigned>(spriteLoad - core.rom), 1); ++i) {
-            const unsigned index = *spriteLoad++;
-            const unsigned spriteCount = ReadByteAt(core, EV_SPRITE_SLOT_COUNT + index);
-            const unsigned currentGfxOffset = ReadWordAt(core, SPRITE_IDENTIFIER + 3 * index);
-            if (gfxOffset == currentGfxOffset) {
-                slotOffset = ReadWordAt(core, 0x819534 + 0x13A0 + 2 * slotNum);
-                return true;
-            }
-            slotNum += spriteCount;
-        }
-    
-        return false;
+
     }
 
     static unsigned GetSpriteVramCacheBase(const SC4Core& core)

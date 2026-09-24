@@ -45,7 +45,8 @@ namespace {
     static constexpr unsigned LEVEL_DAMAGE_BUFF = 0x81A88F;
     static constexpr unsigned LEVEL_MUSIK = 0x8097C3;
     static constexpr unsigned LEVEL_CONTINUE = 0x81FBAC;
-    static constexpr unsigned LEVEL_LOAD_DIRECTION = 0x80D8A3;
+    static constexpr unsigned LEVEL_LOAD_DIRECTION = 0x80D8A3; 
+    static constexpr unsigned LEVEL_ALWAYS_3SCRL = 0x85BD80;
 
     // data tables event   
     static constexpr unsigned SUBWEAPON_DAMAGE_BASE = 0x81A6F8;
@@ -56,6 +57,7 @@ namespace {
     static constexpr unsigned EVENT_DEATH_ANIMATION_BASE = 0x81AE00;
     static constexpr unsigned EVENT_DEATH_MOVBITS_BASE = 0x81AE80;
     static constexpr unsigned EVENT_DAMAGE_BASE = 0x81af00;
+    static constexpr unsigned EVENT_SLOT_SIZE = 0x81AA80;
 
     // expansion 
     static constexpr unsigned EXP_LEVEL_TRANSIT = 0xA0C000;         // AA BB    AA = level BB = checkpoint. 8 Enteries
@@ -146,7 +148,7 @@ namespace {
         int value = canEdit ? static_cast<int>(session.ReadRom(addresses.front(), byteCount)) : 0;
     
         ImGui::BeginDisabled(!canEdit);
-        const float valueWidth = byteCount == 1 ? 64.0f : byteCount == 2 ? 88.0f : 112.0f;
+        const float valueWidth = byteCount == 1 ? 96.0f : byteCount == 2 ? 124.0f : 196.0f;
         BeginPropertyRow(label, valueWidth);
 
         if (ImGui::InputInt("##value", &value, 1, 8, ImGuiInputTextFlags_AutoSelectAll)) {
@@ -189,6 +191,32 @@ namespace {
             }
         }
         EndPropertyRow();
+        ImGui::EndDisabled();
+    }
+
+    static void DrawNumberPropertyCombo(EditorState& state, const char* label, int byteCount, const std::vector<unsigned>& addresses, int minValue, int maxValue, bool enabled = true)
+    {
+        RomSession& session = state.session;
+        const bool canEdit = session.IsLoaded() && enabled && !addresses.empty() && addresses.front() != 0;
+        int value = canEdit ? static_cast<int>(session.ReadRom(addresses.front(), byteCount)) : minValue;
+        value = std::clamp(value, minValue, maxValue);
+        int comboValue = value - minValue;
+        const std::vector<std::string> items = NumberItems(maxValue - minValue + 1);
+
+        ImGui::BeginDisabled(!canEdit);
+        if (ComboRow(label, comboValue, items)) {
+            value = comboValue + minValue;
+            const unsigned mask = byteCount == 1 ? 0xFFu : byteCount == 2 ? 0xFFFFu : 0xFFFFFFFFu;
+            session.WriteRomAll(addresses, byteCount, static_cast<unsigned>(value) & mask);
+            state.levelRenderer.Invalidate();
+        }
+        if (ImGui::IsItemHovered() && !addresses.empty()) {
+            if (addresses.size() == 1) {
+                ImGui::SetTooltip("ROM address: %06X", addresses.front());
+            } else {
+                ImGui::SetTooltip("Writes %zu mirrored ROM addresses", addresses.size());
+            }
+        }
         ImGui::EndDisabled();
     }
 
@@ -734,7 +762,7 @@ namespace {
                 bool changed = false;
                 const EventInfo beforeEdit = *event;
                 int type = static_cast<int>(event->type);
-                const std::vector<std::string> eventTypes = { "entity_respawn", "Candle", "entity_presist", "Unused" };
+                const std::vector<std::string> eventTypes = { "respawn", "Candle", "persist", "Unused" };
                 changed |= ComboRow("Type", type, eventTypes);
                 if (type < 0) {
                     type = 0;
@@ -869,8 +897,8 @@ namespace {
                    
             if (event->eventId == 0x2F) {
                 if (ImGui::CollapsingHeader("Choose Droped Item ID", ImGuiTreeNodeFlags_DefaultOpen)) {
-                    DrawNumberProperty(state, "Breakable Wall Item", 1, { EVENT_BREAKABLE_WALL_ITEM_BASE + ((event->eventSubId) & 0x0F) });
-
+                   DrawNumberProperty(state, "Breakable Wall Item", 1, { EVENT_BREAKABLE_WALL_ITEM_BASE + ((event->eventSubId) & 0x0F) });
+                    
                 }
             }
             
@@ -904,12 +932,11 @@ namespace {
                     ImGui::BeginDisabled(disabled);
                     ComboRow("Transition", g_propertyState.nextLevelDirection, entrances);
                     ImGui::EndDisabled();
-                    const unsigned transitionBase = EXP_LEVEL_TRANSIT + 0x10 * static_cast<unsigned>(state.level) + 0x2 * static_cast<unsigned>(g_propertyState.nextLevelDirection);
-                    DrawNumberProperty(state, "Next Level", 1, { transitionBase + 0x0 }, expanded);
                     
+                    const unsigned transitionBase = EXP_LEVEL_TRANSIT + 0x10 * static_cast<unsigned>(state.level) + 0x2 * static_cast<unsigned>(g_propertyState.nextLevelDirection);
+                    DrawNumberProperty(state, "Next Level", 1, { transitionBase + 0x0 }, expanded);              
+                    //DrawNumberPropertyCombo(state, "Next Checkpoint", 1, { transitionBase + 0x1 }, 0x0, 0x7, expanded);
                     DrawNumberPropertySlider(state, "Next Checkpoint", 1, { transitionBase + 0x1 },0x0 ,0x7 , expanded);                     
-                    //int nextCheckpoint = static_cast<int>(transitionBase + 0x1);    // fails becasue?? reflecting in a combo row seems better to differanciate it as a user.       
-                    //ComboRow("Next Checkpoint", nextCheckpoint, entrances);
                     
                 }
             }
@@ -947,11 +974,12 @@ namespace {
                 DrawNumberProperty(state, "Hitbox Y", 1, { EVENT_HITBOX_BASE + 1 + (event->eventId) * 2 });
                 DrawNumberProperty(state, "Health", 2, { EVENT_HEALTH_BASE + (event->eventId) * 2 });
                 DrawNumberProperty(state, "Damage", 1, { EVENT_DAMAGE_BASE + (event->eventId) });
-               
+   
                 ImGui::TextDisabled("Some events overwrite there attributes in ther code.");
-                DrawBitfieldByteProperty(state, "hurt subW whip col ?? ?? msk rosry noDesp", { EVENT_HIT_ATTRIBUTE_BASE + (event->eventId) * 2 });
+                DrawBitfieldByteProperty(state, "hurt whip subW pick ?? mask rosry noDesp", { EVENT_HIT_ATTRIBUTE_BASE + (event->eventId) * 2 });
                 ImGui::Separator();
 			//	ImGui::TextDisabled("Edit with cosion game might crash!");
+                DrawNumberProperty(state, "!Slot Size", 1, { EVENT_SLOT_SIZE + (event->eventId) });
                 DrawNumberProperty(state, "!Death spawnID (Flame)", 1, { EVENT_DEATH_ANIMATION_BASE + (event->eventId) }); 
                 DrawNumberProperty(state, "!Death Movement Bits", 1, { EVENT_DEATH_MOVBITS_BASE + (event->eventId) });
                 ImGui::Separator();
@@ -1010,15 +1038,25 @@ namespace {
     {
         if (ImGui::CollapsingHeader("Level", ImGuiTreeNodeFlags_DefaultOpen)) {
             
-            DrawNumberProperty(state, "Continue level", 1, { LevelAddress(LEVEL_CONTINUE, state) });
+           //static const std::vector<std::string> directionName = { "Right", "Left", "Down", "Up" };
+           // int timerValue = SNESCore::snes2pc(0x85BCF8) * state.level + 2;
+           // ImGui::Text("Timer %x", (timerValue) & 0x0FFFu);
+
             DrawNumberProperty(state, "Music", 1, { LevelAddress(LEVEL_MUSIK, state) });
+            DrawNumberProperty(state, "Continue level", 1, { LevelAddress(LEVEL_CONTINUE, state) });
+            DrawNumberProperty(state, "Level Type", 2, { LevelAddress(LEVEL_TYPE, state, 2) });   // FIXME ComboBox describe pluse level reload! Check if loadMOD7 rooms break rom!
             DrawNumberProperty(state, "Timer", 2, { LevelAddress(LEVEL_TIMER, state, 2) });       // FIXME This is already decimal in the rom 
             DrawNumberProperty(state, "Enemy Damage Buff", 1, { LevelAddress(LEVEL_DAMAGE_BUFF, state, 1) });            
-            DrawNumberProperty(state, "Level Type", 2, { LevelAddress(LEVEL_TYPE, state, 2) });   // FIXME ComboBox describe pluse level reload! Check if loadMOD7 rooms break rom!
+            ImGui::Separator();
             DrawNumberProperty(state, "Layer Transperent Mask", 2, { LevelAddress(LEVEL_BG_PROPERTY_MASK_BASE, state, 2) });
             DrawFlaggedWordProperty(state, "Layer Scroll Modes", "Layer behavior flag", { LevelAddress(LEVEL_BG_SCROLL_BASE, state, 2) }, 0x8000);
-            DrawNumberProperty(state, "Event direction", 1, { LevelAddress(LEVEL_LOAD_DIRECTION, state) });
-           //reused or not properly implemented stuff..
+            //DrawNumberProperty(state, "Event direction", 1, { LevelAddress(LEVEL_LOAD_DIRECTION, state) });       
+            DrawNumberPropertyCombo(state, "Event load direction 0 Right | 1 Left | 2 Down | 3 Up", 1, { LevelAddress(LEVEL_LOAD_DIRECTION, state) }, 0x0, 0x3, true);
+            ImGui::Separator();
+            DrawNumberProperty(state, "!Always 3 cam behavior", 2, { LevelAddress(LEVEL_ALWAYS_3SCRL, state,2) });
+            
+
+            //reused or not properly implemented stuff..
            //const unsigned deathBase = state.session.Region() == 0 ? 0x81B395 : 0x81B369;
            //DrawNumberProperty(state, "Death level", 1, { LevelAddress(deathBase, state) }); // unexpanded death level??
            //DrawNumberProperty(state, "BG animation 0", 2, { LevelAddress(0x85CA82, state, 2) });
@@ -1026,7 +1064,8 @@ namespace {
            //DrawNumberProperty(state, "Palette animation", 2, { LevelAddress(0x86946F, state, 2) });
            //DrawNumberProperty(state, "Enemy set ID", 2, { LevelAddress(0x868BCD, state, 2) });
            //DrawNumberProperty(state, "Enemy set", 2, { LevelAddress(0x868B45, state, 2) });
-             DrawCurrentLevelEnemies(state);
+            
+            DrawCurrentLevelEnemies(state);
         }
     }
 

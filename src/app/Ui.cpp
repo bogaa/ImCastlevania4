@@ -812,6 +812,7 @@ static void DrawSidebar(EditorState& state)
     ImGui::Checkbox("Show Collision", &state.showCollision);
     ImGui::Checkbox("Show Events", &state.showEvents);
     ImGui::Checkbox("Show Grid", &state.showGrid);
+    //ImGui::Checkbox("Show Event Names", LevelRenderer&showEventNames);
     ImGui::End();
 }
 
@@ -2954,7 +2955,7 @@ static void DrawDockSpace(EditorState& state, HWND hwnd)
 void DrawEditorUi(EditorState& state, HWND hwnd, ID3D11Device* device, const std::vector<std::wstring>& droppedFiles)
 {
     hWID[0] = hwnd;
-    std::string windowTitle = "ImCastlevania4 v0.0.3";
+    std::string windowTitle = "ImSC4 version 0.0.4";
     if (state.session.IsLoaded()) {
         const std::string& path = state.session.Info().path;
         const size_t slash = path.find_last_of("\\/");
