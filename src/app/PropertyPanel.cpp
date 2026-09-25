@@ -5,6 +5,8 @@
 #include "imgui.h"
 #include "SC4Core.h"
 
+#include <commdlg.h>
+
 #include <algorithm>
 #include <array>
 #include <cstdio>
@@ -29,6 +31,8 @@ namespace {
         int exitType = 0;
         int enemyToAdd = 0x07;
         std::string enemyAddStatus;
+        char asarPatchPath[MAX_PATH] = {};
+        std::string asarPatchStatus;
     };
     
     static PropertyUiState g_propertyState;
@@ -748,6 +752,46 @@ namespace {
             DrawNumberProperty(state, "Continue lives", 2, { 0x8CFD9B });
     
         
+        }
+    }
+
+    static void DrawAsarPatching(EditorState& state)
+    {
+        if (ImGui::CollapsingHeader("ASM patching", ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::InputText("ASM file", g_propertyState.asarPatchPath,
+                sizeof(g_propertyState.asarPatchPath));
+            ImGui::SameLine();
+            if (ImGui::Button("Choose...")) {
+                char path[MAX_PATH] = {};
+                OPENFILENAMEA dialog = {};
+                dialog.lStructSize = sizeof(dialog);
+                dialog.lpstrFilter = "Assembly files (*.asm)\0*.asm\0All files (*.*)\0*.*\0";
+                dialog.lpstrFile = path;
+                dialog.nMaxFile = MAX_PATH;
+                dialog.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+                dialog.lpstrTitle = "Choose Asar patch";
+                if (GetOpenFileNameA(&dialog)) {
+                    strcpy_s(g_propertyState.asarPatchPath,
+                        sizeof(g_propertyState.asarPatchPath), path);
+                }
+            }
+
+            const bool hasPatchPath = g_propertyState.asarPatchPath[0] != '\0';
+            ImGui::BeginDisabled(!hasPatchPath);
+            if (ImGui::Button("Apply ASM patch")) {
+                PushUndo(state);
+                if (state.session.ApplyAsarPatch(g_propertyState.asarPatchPath)) {
+                    g_propertyState.asarPatchStatus = "ASM patch applied.";
+                    state.levelRenderer.Invalidate();
+                } else {
+                    g_propertyState.asarPatchStatus = state.session.LastError();
+                }
+            }
+            ImGui::EndDisabled();
+
+            if (!g_propertyState.asarPatchStatus.empty()) {
+                ImGui::TextWrapped("%s", g_propertyState.asarPatchStatus.c_str());
+            }
         }
     }
 
@@ -1810,6 +1854,8 @@ void DrawGlobalPropertiesTab(EditorState& state)
     ImGui::BeginChild("global-properties-scroll", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
     DrawGeneralProperties(state);
     DrawPlayerProperties(state);
+    DrawAsarPatching(state);
+
     ImGui::EndChild();
 }
 

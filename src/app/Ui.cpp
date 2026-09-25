@@ -244,22 +244,54 @@ static void EnsureDefaultInternalEmulatorControls()
         }
     };
 
-    assignKey(InternalEmulatorButtonType::UP, VK_UP);
-    assignKey(InternalEmulatorButtonType::DOWN, VK_DOWN);
-    assignKey(InternalEmulatorButtonType::LEFT, VK_LEFT);
-    assignKey(InternalEmulatorButtonType::RIGHT, VK_RIGHT);
-    assignKey(InternalEmulatorButtonType::B, 'Z');
-    assignKey(InternalEmulatorButtonType::Y, 'X');
-    assignKey(InternalEmulatorButtonType::A, 'C');
-    assignKey(InternalEmulatorButtonType::X, 'S');
-    assignKey(InternalEmulatorButtonType::L, 'A');
-    assignKey(InternalEmulatorButtonType::R, 'D');
-    assignKey(InternalEmulatorButtonType::SELECT, VK_RSHIFT);
-    assignKey(InternalEmulatorButtonType::START, VK_RETURN);
-    assignKey(InternalEmulatorButtonType::NEXTSTATE, VK_OEM_6);
-    assignKey(InternalEmulatorButtonType::PREVSTATE, VK_OEM_4);
-    assignKey(InternalEmulatorButtonType::SAVESTATE, VK_F5);
-    assignKey(InternalEmulatorButtonType::LOADSTATE, VK_F8);
+       assignKey(InternalEmulatorButtonType::UP, VK_UP);
+       assignKey(InternalEmulatorButtonType::DOWN, VK_DOWN);
+       assignKey(InternalEmulatorButtonType::LEFT, VK_LEFT);
+       assignKey(InternalEmulatorButtonType::RIGHT, VK_RIGHT);
+       assignKey(InternalEmulatorButtonType::B, 'Z');
+       assignKey(InternalEmulatorButtonType::Y, 'X');
+       assignKey(InternalEmulatorButtonType::A, 'C');
+       assignKey(InternalEmulatorButtonType::X, 'S');
+       assignKey(InternalEmulatorButtonType::L, 'A');
+       assignKey(InternalEmulatorButtonType::R, 'D');
+       assignKey(InternalEmulatorButtonType::SELECT, VK_RSHIFT);
+       assignKey(InternalEmulatorButtonType::START, VK_RETURN);
+       assignKey(InternalEmulatorButtonType::NEXTSTATE, VK_OEM_6);
+       assignKey(InternalEmulatorButtonType::PREVSTATE, VK_OEM_4);
+       assignKey(InternalEmulatorButtonType::SAVESTATE, VK_F5);
+       assignKey(InternalEmulatorButtonType::LOADSTATE, VK_F8);
+
+    //  assignKey(InternalEmulatorButtonType::UP, JOY_BUTTON1);
+    //  assignKey(InternalEmulatorButtonType::DOWN, JOY_BUTTON2);
+    //  assignKey(InternalEmulatorButtonType::LEFT, JOY_BUTTON3);
+    //  assignKey(InternalEmulatorButtonType::RIGHT, JOY_BUTTON4);
+    //  assignKey(InternalEmulatorButtonType::B, JOY_BUTTON5);
+    //  assignKey(InternalEmulatorButtonType::Y, JOY_BUTTON6);
+    //  assignKey(InternalEmulatorButtonType::A, JOY_BUTTON7);
+    //  assignKey(InternalEmulatorButtonType::X, JOY_BUTTON8);
+    //  assignKey(InternalEmulatorButtonType::L, JOY_BUTTON9);
+    //  assignKey(InternalEmulatorButtonType::R, JOY_BUTTON10);
+    //  assignKey(InternalEmulatorButtonType::SELECT, JOY_BUTTON11);
+    //  assignKey(InternalEmulatorButtonType::START, JOY_BUTTON12);
+    //  assignKey(InternalEmulatorButtonType::NEXTSTATE, VK_OEM_6);
+    //  assignKey(InternalEmulatorButtonType::PREVSTATE, VK_OEM_4);
+    //  assignKey(InternalEmulatorButtonType::SAVESTATE, VK_F5);
+    //  assignKey(InternalEmulatorButtonType::LOADSTATE, VK_F8);
+	
+    // int setting = 0;
+	// 
+    // setting.type = InternalEmulatorInputType::KEY;
+    // 
+    // const auto assignJoy = [](InternalEmulatorButtonType button, unsigned value) {
+    //     InternalEmulatorButtonSetting& setting =
+    //         set.emulatorButtons[static_cast<unsigned>(button)];
+    // 
+    //     if (setting.value == 0) {
+    //         setting.type = InternalEmulatorInputType::JOY;
+    //         setting.value = value;
+    //     }
+    // };
+
 }
 
 static void ReleaseInternalEmulatorTexture()
@@ -946,16 +978,18 @@ static void DrawInternalEmulator(EditorState& state, ID3D11Device* device)
         //state.session.WriteRom(entranceBase + 0x1E, 2, static_cast<unsigned>(0xC358)); // what is this really?
         state.levelRenderer.Invalidate();
     }
-    ImGui::SameLine;
-    static int recordJoy_B = 0; 
-    if (ImGui::Button("Set Joy B")) {
-        recordJoy_B++ ;
-    }
-    if (recordJoy_B & 1) {
-        ImGui::Text("Press B Button");
-
-    }
-            
+    
+    //ImGui::SameLine;
+    //static int recordJoy_B = 0; 
+    //if (ImGui::Button("Set Joy B")) {
+    //    recordJoy_B++ ;
+    //}
+    //if (recordJoy_B & 1) {
+    //    ImGui::Text("Press B Button");
+    //
+    //}
+    //controller[RETRO_DEVICE_ID_JOYPAD_B] = joyOk &&
+    //    (joyInfoEx.dwButtons & JOY_BUTTON1) ? 1 : 0;
 
     ImGui::End();
 }
@@ -2956,7 +2990,7 @@ static void DrawDockSpace(EditorState& state, HWND hwnd)
 void DrawEditorUi(EditorState& state, HWND hwnd, ID3D11Device* device, const std::vector<std::wstring>& droppedFiles)
 {
     hWID[0] = hwnd;
-    std::string windowTitle = "ImSC4 version 0.0.4";
+    std::string windowTitle = "ImSC4 version 0.0.5";
     if (state.session.IsLoaded()) {
         const std::string& path = state.session.Info().path;
         const size_t slash = path.find_last_of("\\/");

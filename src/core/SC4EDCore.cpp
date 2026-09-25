@@ -13,6 +13,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "SC4EDCore.h"
 
+#include <cstring>
+
 // WinControls
 void ShowLastError(DWORD);
 
@@ -55,6 +57,26 @@ void SC4EDCore::FreeRom()
 		rom = NULL;
 	}
 	dummyHeader = 0;
+}
+bool SC4EDCore::ReplaceRom(const BYTE* data, DWORD size)
+{
+	if (!data || size == 0) {
+		return false;
+	}
+
+	LPBYTE replacement = static_cast<LPBYTE>(malloc(size < 0x400000 ? 0x400000 : size));
+	if (!replacement) {
+		return false;
+	}
+	std::memcpy(replacement, data, size);
+
+	if (rom) {
+		free(rom - dummyHeader);
+	}
+	rom = replacement;
+	dummyHeader = 0;
+	romSize = size;
+	return true;
 }
 bool SC4EDCore::LoadNewRom(LPCSTR fileName)
 {

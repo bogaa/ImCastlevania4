@@ -1331,6 +1331,7 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
     ImGui::EndChild();  // end tile collusion editing
 }  
 
+// Functions
 bool LevelRenderer::CopyAvailableTilesToClipboard(HWND hwnd, RomSession& session, unsigned palette) const
 {
     if (!session.IsLoaded()) {
@@ -2199,11 +2200,6 @@ bool LevelRenderer::SetBlockAtLevelPoint(SC4Core& core, int levelX, int levelY, 
         const unsigned ramOffset = 0x5000 + blockIndex;
         *reinterpret_cast<WORD*>(core.ram + ramOffset) = block;
         WriteExpandedRamToRom(core, ramOffset, 2);
-    } else if (core.type == 2) {
-        const unsigned blockIndex = static_cast<unsigned>(sceneIndex) * 0x40 + static_cast<unsigned>(localIndex) + core.mapBase;
-        const unsigned ramOffset = 0x4000 + blockIndex;
-        *(core.ram + ramOffset) = static_cast<BYTE>(block & 0xFF);
-        WriteExpandedRamToRom(core, ramOffset, 1);
     }
 
     return true;

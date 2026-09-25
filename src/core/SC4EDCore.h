@@ -32,6 +32,7 @@ public:
 	~SC4EDCore();
 	void GetHWND(HWND);
 	void FreeRom();
+	bool ReplaceRom(const BYTE* data, DWORD size);
 	bool LoadNewRom(LPCSTR);
 	bool SaveRom(LPCSTR);
 	bool SaveAsRom(LPCSTR);

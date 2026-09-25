@@ -49,6 +49,7 @@ public:
     void SlotEvents();
     void SaveEvents();
     bool ExpandRom();
+    bool ApplyAsarPatch(const std::string& patchPath);
     bool Save();
     bool SaveAs(const std::string& path);
 

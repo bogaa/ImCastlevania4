@@ -1,6 +1,7 @@
 #include "RomSession.h"
 
 #include "SC4Core.h"
+#include "asardll.h"
 
 #include <algorithm>
 #include <cstring>
@@ -360,6 +361,61 @@ void RomSession::SaveEvents()
     BeginEdit();
 }
 
+bool RomSession::ApplyAsarPatch(const std::string& patchPath)
+{
+    if (!loaded_) {
+        lastError_ = "No ROM is loaded.";
+        return false;
+    }
+
+    core_->SaveEvents();
+    core_->SaveLevel();
+
+    const unsigned currentLevel = core_->level;
+    const unsigned headerSize = core_->dummyHeader;
+    const BYTE* fileStart = core_->rom - headerSize;
+    const std::vector<uint8_t> original(fileStart, fileStart + core_->romSize);
+    std::vector<uint8_t> patchable(core_->rom, core_->rom + core_->romSize - headerSize);
+
+    AsarDll asar;
+    if (!asar.Init()) {
+        lastError_ = "Could not load asar.dll.";
+        return false;
+    }
+
+    std::string error;
+    if (!asar.Patch(patchPath.c_str(), patchable, error)) {
+        lastError_ = error;
+        return false;
+    }
+
+    std::vector<uint8_t> patched;
+    patched.reserve(headerSize + patchable.size());
+    patched.insert(patched.end(), original.begin(), original.begin() + headerSize);
+    patched.insert(patched.end(), patchable.begin(), patchable.end());
+
+    if (!core_->ReplaceRom(patched.data(), static_cast<DWORD>(patched.size()))) {
+        lastError_ = "Could not replace the ROM.";
+        return false;
+    }
+
+    core_->Init();
+    if (!core_->CheckROM()) {
+        if (core_->ReplaceRom(original.data(), static_cast<DWORD>(original.size()))) {
+            core_->Init();
+            core_->CheckROM();
+        }
+        lastError_ = "The patched ROM is not a supported ROM.";
+        return false;
+    }
+
+    levelCount_ = static_cast<int>(core_->numLevels);
+    LoadLevel(static_cast<int>(currentLevel), 0);
+    BeginEdit();
+    lastError_.clear();
+    return true;
+}
+
 bool RomSession::AddEvent(const EventInfo& event, int* eventIndex)
 {
     if (!loaded_) {
@@ -399,19 +455,36 @@ bool RomSession::AddEvent(const EventInfo& event, int* eventIndex)
     return true;
 }
 
-bool RomSession::ExpandRom()
-{
+bool RomSession::ExpandRom()        // moved to last stage as I implemented the asar.
+{   
     if (!loaded_) {
         lastError_ = "No ROM is loaded.";
         return false;
     }
 
     if (!core_->ExpandROM()) {
-        lastError_ = "ROM expansion failed.";
+        lastError_ = "Could not expand the ROM.";
         return false;
     }
 
-    LoadRomInfo(core_->filePath, info_);
+    if (!core_->CheckROM()) {
+        lastError_ = "The expanded ROM is not supported.";
+        return false;
+    }
+
+    levelCount_ = static_cast<int>(core_->numLevels);
+    if (!LoadLevel(static_cast<int>(core_->level), 0)) {
+        if (lastError_.empty()) {
+            lastError_ = "Could not reload the expanded ROM.";
+        }
+        return false;
+    }
+
+
+    if (!ApplyAsarPatch("main.asm")) {
+        return false;
+    }
+
     BeginEdit();
     lastError_.clear();
     return true;

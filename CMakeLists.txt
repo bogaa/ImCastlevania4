@@ -37,6 +37,8 @@ set(APP_SOURCES
 )
 
 set(CORE_SOURCES
+    src/core/asardll.cpp
+    # Converted Asar wrapper source
     src/core/CompressionCore.cpp
     src/core/Emulator.cpp
     src/core/libretrow.cpp
