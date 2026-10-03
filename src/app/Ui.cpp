@@ -487,6 +487,7 @@ static void DrawTopBar(EditorState& state, HWND hwnd)
                     AddLog("ROM expanded.");
                 } else {
                     AddLog("Expand failed: " + state.session.LastError());
+                    MessageBoxA(hwnd, state.session.LastError().c_str(), "ROM expansion failed", MB_OK | MB_ICONERROR);     // for asar error messange since I could not resolve the patch issue in the code.
                 }
             }
             ImGui::Separator();
@@ -552,44 +553,21 @@ static void BuildDefaultDockLayout(ImGuiID dockspaceId, ImVec2 dockspaceSize)
     ImGuiID mainId = dockspaceId;
     const ImGuiID rightId = ImGui::DockBuilderSplitNode(mainId, ImGuiDir_Right, 0.26f, nullptr, &mainId);
     const ImGuiID bottomId = ImGui::DockBuilderSplitNode(mainId, ImGuiDir_Up, 0.80f, nullptr, &mainId);
-    const ImGuiID bottomRightId = ImGui::DockBuilderSplitNode(bottomId, ImGuiDir_Right, 0.26f, nullptr, &mainId);
+    const ImGuiID bottomRightId = ImGui::DockBuilderSplitNode(bottomId, ImGuiDir_Left, 0.26f, nullptr, &mainId);
  
     ImGui::DockBuilderDockWindow("Level View", mainId);
     ImGui::DockBuilderDockWindow("Palette", bottomRightId);
-    ImGui::DockBuilderDockWindow("ROM", mainId);
+    ImGui::DockBuilderDockWindow("ROM", bottomId);
     ImGui::DockBuilderDockWindow("Level Properties", rightId);
     ImGui::DockBuilderDockWindow("Navigator", bottomId);
     ImGui::DockBuilderDockWindow("Tools", rightId);
-    ImGui::DockBuilderDockWindow("Log", mainId);
+    ImGui::DockBuilderDockWindow("Log", bottomId);
     ImGui::DockBuilderDockWindow("Global Properties", rightId);
     ImGui::DockBuilderDockWindow("Selection", bottomRightId);
-    ImGui::DockBuilderDockWindow("Internal Emulator", bottomId);
+    ImGui::DockBuilderDockWindow("Internal Emulator", bottomRightId);
     ImGui::DockBuilderDockWindow("Help###HelpView", mainId);
     ImGui::DockBuilderFinish(dockspaceId);
 
-
-//   ImGuiID mainId = dockspaceId;
-//   const ImGuiID bottomId = ImGui::DockBuilderSplitNode(mainId, ImGuiDir_Down, 0.30f, nullptr, &mainId);
-//   ImGuiID leftId = ImGui::DockBuilderSplitNode(mainId, ImGuiDir_Left, 0.22f, nullptr, &mainId);
-//   const ImGuiID rightId = ImGui::DockBuilderSplitNode(mainId, ImGuiDir_Right, 0.26f, nullptr, &mainId);
-//   const ImGuiID paletteId = ImGui::DockBuilderSplitNode(leftId, ImGuiDir_Up, 0.24f, nullptr, &leftId);
-//   ImGuiID leftTopId = leftId;
-//   const ImGuiID leftBottomId = ImGui::DockBuilderSplitNode(leftTopId, ImGuiDir_Down, 0.56f, nullptr, &leftTopId);
-//
-//   ImGui::DockBuilderDockWindow("Level View", mainId);
-//   ImGui::DockBuilderDockWindow("Palette", paletteId);
-//   ImGui::DockBuilderDockWindow("ROM", leftTopId);
-//   ImGui::DockBuilderDockWindow("Level Properties", leftTopId);
-//   ImGui::DockBuilderDockWindow("Navigator", leftBottomId);
-//   ImGuiID bottomTopId = bottomId;
-//   const ImGuiID logId = ImGui::DockBuilderSplitNode(bottomTopId, ImGuiDir_Down, 0.18f, nullptr, &bottomTopId);
-//   ImGui::DockBuilderDockWindow("Tools", bottomTopId);
-//   ImGui::DockBuilderDockWindow("Log", logId);
-//   ImGui::DockBuilderDockWindow("Global Properties", rightId);
-//   ImGui::DockBuilderDockWindow("Selection", rightId);
-//   ImGui::DockBuilderDockWindow("Internal Emulator", rightId);
-//   ImGui::DockBuilderDockWindow("Help###HelpView", rightId);
-//   ImGui::DockBuilderFinish(dockspaceId);
 }
 
 static int g_selectedPaletteIndex = 0;
@@ -928,13 +906,14 @@ static void DrawInternalEmulator(EditorState& state, ID3D11Device* device)
         context->UpdateSubresource(g_emulatorTexture, 0, nullptr, pixels.data(), 256 * sizeof(uint32_t), 0);
         context->Release();
     }
-
-    const ImVec2 avail = ImGui::GetContentRegionAvail();
-    const float scale = (std::max)(1.0f, std::floor((std::min)(avail.x / 256.0f, avail.y / 224.0f)));
+	//ImGui::SameLine();
+    ImGui::SliderFloat("Emulator Zoom", &state.emulatorScale, 1.0f, 4.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
+    const float scale = state.emulatorScale;
     const ImVec2 imageSize(256.0f * scale, 224.0f * scale);
     ImGui::Image(reinterpret_cast<ImTextureID>(g_emulatorTextureView), imageSize);
     g_internalEmulatorCapturesKeyboard = ImGui::IsItemHovered() || ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
   
+   
     ImGui::Text("Level %d",
     frame.levelNum);
     ImGui::Separator();
@@ -959,7 +938,12 @@ static void DrawInternalEmulator(EditorState& state, ID3D11Device* device)
     frame.state0, frame.state1, frame.lockState);
     ImGui::Separator();
     const unsigned entranceBase = 0xA78000 + 0x100 * static_cast<unsigned>(state.level) + 0x20 * static_cast<unsigned>(state.checkpoint);
-    if (ImGui::Button("Record from Emulator")) {
+    
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.100f, 0.30f, 0.40f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.85f, 0.12f, 0.12f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.05f, 0.05f, 1.0f));
+    if (ImGui::Button("Record Entrance from Emulator")) {
+        
         state.session.WriteRom(entranceBase + 0x00, 2, static_cast<unsigned>(state.checkpoint));     
         state.session.WriteRom(entranceBase + 0x02, 2, static_cast<unsigned>(frame.s_xpos));
         state.session.WriteRom(entranceBase + 0x04, 2, static_cast<unsigned>(frame.s_ypos));
@@ -978,6 +962,7 @@ static void DrawInternalEmulator(EditorState& state, ID3D11Device* device)
         //state.session.WriteRom(entranceBase + 0x1E, 2, static_cast<unsigned>(0xC358)); // what is this really?
         state.levelRenderer.Invalidate();
     }
+    ImGui::PopStyleColor(3);
     
     //ImGui::SameLine;
     //static int recordJoy_B = 0; 
@@ -2990,7 +2975,7 @@ static void DrawDockSpace(EditorState& state, HWND hwnd)
 void DrawEditorUi(EditorState& state, HWND hwnd, ID3D11Device* device, const std::vector<std::wstring>& droppedFiles)
 {
     hWID[0] = hwnd;
-    std::string windowTitle = "ImSC4 version 0.0.5";
+    std::string windowTitle = "ImSC4 version 0.0.7";
     if (state.session.IsLoaded()) {
         const std::string& path = state.session.Info().path;
         const size_t slash = path.find_last_of("\\/");

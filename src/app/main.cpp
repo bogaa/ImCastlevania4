@@ -47,7 +47,7 @@ static std::wstring IniPathBesideExecutable()
     } else {
         path.clear();
     }
-    return path + L"SC4EdImGui.ini";
+    return path + L"ImSC4Ed.ini";
 }
 
 static std::string WideToUtf8(const std::wstring& value)
@@ -67,7 +67,7 @@ static int ReadIniInt(const wchar_t* key, int fallback)
     wchar_t value[32] = {};
     wchar_t defaultValue[32] = {};
     _itow_s(fallback, defaultValue, 10);
-    GetPrivateProfileStringW(L"SC4Ed", key, defaultValue, value, _countof(value), g_iniPath.c_str());
+    GetPrivateProfileStringW(L"ImSC4Ed", key, defaultValue, value, _countof(value), g_iniPath.c_str());
     return _wtoi(value);
 }
 
@@ -75,7 +75,7 @@ static void WriteIniInt(const wchar_t* key, int value)
 {
     wchar_t text[32] = {};
     _itow_s(value, text, 10);
-    WritePrivateProfileStringW(L"SC4Ed", key, text, g_iniPath.c_str());
+    WritePrivateProfileStringW(L"ImSC4Ed", key, text, g_iniPath.c_str());
 }
 
 static SavedWindowPlacement LoadWindowPlacement(float scale)

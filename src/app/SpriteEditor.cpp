@@ -54,6 +54,8 @@ namespace {
     static int g_spritePaletteId = 0;
     static uint32_t g_spritePaletteFrameKey = 0xFFFFFFFFu;
     static std::string g_spriteClipboardStatus;
+    static int g_vramCacheZoom = 2;
+    static int g_vramCachePalette = 0;
 
     //offsets sprite
     //static constexpr unsigned ENEMY_ID_SET = 0x868296; 
@@ -575,6 +577,7 @@ namespace {
         case 0x10: return 0x8EB9;
         case 0x11:
         case 0x12: return 0x8AF4;
+        case 0x14: return 0xA619;
         case 0x16: return 0xA682;
         case 0x17: return 0xA6EF;
         
@@ -669,6 +672,7 @@ namespace {
             default: break;
             }
         }
+
         if (event.eventId == 0x2E) {
             switch (event.eventSubId & 0xFF) {
             case 0x00: return 0xA507;
@@ -759,147 +763,150 @@ namespace {
             return true;
         }
 
-        unsigned int event_2_eva = event.eventId & 0xFF;   
-        // group eventIDs with same GFX slot
-        
-        if (event.eventId == 0x38) {        // autospawner sprites
-            switch (event.eventSubId & 0xFF) {
-            case 0x00:
-            event_2_eva = 0x39;   // pillar    
-            break;
-            case 0x01:
-            event_2_eva = 0x07;    // Medusa   
-            break;
-            case 0x02:
-            event_2_eva = 0x07;    // Medusa     
-            break;
-            case 0x03:
-            event_2_eva = 0x54;    // Zombie 
-            break;
-            case 0x04:
-            event_2_eva = 0x51;    // fishmanSpit 
-            break;
-            case 0x05:
-            event_2_eva = 0x51;    // fishmanJump   
-            break;
-            case 0x06:
-            event_2_eva = 0x07;    // spawn_7Medusas
-            break;
-            case 0x07:
-            event_2_eva = 0x58;    // eagles   
-            break;
-            case 0x08:
-            event_2_eva = 0x66;    // grabingHand   
-            break;
-            case 0x09:
-            event_2_eva = 0x0c;    // bat   
-            break;
-            case 0x0a:
-            event_2_eva = 0x67;    // not working     
-            break;           
-            case 0x0b:
-            event_2_eva = 0x0b;    // graveDigger   
-            break;
-            default: 
-            break;
-            }
-        }
-       
-        switch (event.eventId & 0xFF) {
-        case 0x01:
-            event_2_eva = 0x0b;   // pillar    
-            break;
-        case 0x11:
-        case 0x12:       
-            event_2_eva = 0x12;   // skellys   
-            break;
-        case 0x4e:
-            event_2_eva = 0x0c;   // hanging bat  
-        case 0x4f:
-        case 0x50:
-        case 0x51:
-            event_2_eva = 0x4c;   // fishman 
-            break;
-        case 0x57:
-            event_2_eva = 0x58;   // harpies    
-            break;
-        //case 0x14:
-        //    event_2_eva = 0x2e;   // moon bats   
+        //unsigned int event_2_eva = event.eventId & 0xFF;   
+        //// group eventIDs with same GFX slot
+        //
+        //if (event.eventId == 0x38) {        // autospawner sprites
+        //    switch (event.eventSubId & 0xFF) {
+        //    case 0x00:
+        //    event_2_eva = 0x39;   // pillar    
         //    break;
-        case 0x18: // items
-        case 0x19:
-        case 0x1a:
-        case 0x1b:
-        case 0x1c:
-        case 0x1d:
-        case 0x1e:
-        case 0x1f:
-        case 0x20:
-        case 0x21:
-        case 0x22:
-        case 0x23:
-        case 0x24:
-        case 0x25:
-        case 0x26:
-        case 0x27:
-        case 0x28:
-        case 0x0e:                  // candle
-        case 0x53:                  // axe of knight  
-            slotOffset = 0;        
-            return true;
-        default:
-            break;
-        }
-
-        // Just add slot number of current event loaded in order.     
-        unsigned int tablePointer = (ReadWordAt(core, (0x868BCD + 2 * core.level)) | 0x860000);
-        unsigned int tableSize = ReadByteAt(core, tablePointer);                    // first bytes = size
-        unsigned int index_ID_ta = 0;
-        unsigned int sloted_ID = 0;
-        unsigned int slotSize = 0; 
-        unsigned int slotNum = 0;
-        
-        tableSize++;
-        for (tableSize != 0; --tableSize;) {
-            index_ID_ta++;
-            
-            sloted_ID = ReadByteAt(core, tablePointer + index_ID_ta);
-            if (sloted_ID == event_2_eva) {                          
-                slotOffset = ReadWordAt(core, 0x81A8D4 + slotNum * 2);
-                return true;                                                       // current event is in this slot so we can return. 
-            }
-            slotSize = ReadByteAt(core, 0x81AA80 + sloted_ID);
-            if (slotSize != 0xFF) {
-                slotNum += slotSize;                                               // only cont event with GFXslot content 
-            } 
-        }                                                                      
-
-        if (tableSize == 0) {
-            return false;
-        }
-
-        //// This emulates what SC4 does in game 
-        //const unsigned gfxOffset = ReadWordAt(core, SPRITE_IDENTIFIER + 3 * (event.eventId & 0xFF));
-        //const unsigned levelOffset = ReadWordAt(core, ENEMY_SET_GFX + 2 * core.level);
-        //const unsigned spriteLoadPc = SNESCore::snes2pc(static_cast<int>(0x860000 + levelOffset));
-        //if (!gfxOffset || !CanReadRom(core, spriteLoadPc, 1)) {
-        //    return false;
+        //    case 0x01:
+        //    event_2_eva = 0x07;    // Medusa   
+        //    break;
+        //    case 0x02:
+        //    event_2_eva = 0x07;    // Medusa     
+        //    break;
+        //    case 0x03:
+        //    event_2_eva = 0x54;    // Zombie 
+        //    break;
+        //    case 0x04:
+        //    event_2_eva = 0x51;    // fishmanSpit 
+        //    break;
+        //    case 0x05:
+        //    event_2_eva = 0x51;    // fishmanJump   
+        //    break;
+        //    case 0x06:
+        //    event_2_eva = 0x07;    // spawn_7Medusas
+        //    break;
+        //    case 0x07:
+        //    event_2_eva = 0x58;    // eagles   
+        //    break;
+        //    case 0x08:
+        //    event_2_eva = 0x66;    // grabingHand   
+        //    break;
+        //    case 0x09:
+        //    event_2_eva = 0x0c;    // bat   
+        //    break;
+        //    case 0x0a:
+        //    event_2_eva = 0x67;    // not working     
+        //    break;           
+        //    case 0x0b:
+        //    event_2_eva = 0x0b;    // graveDigger   
+        //    break;
+        //    default: 
+        //    break;
+        //    }
         //}
         //
-        //const BYTE* spriteLoad = core.rom + spriteLoadPc;
-        //const unsigned count = *spriteLoad++;
-        //unsigned slotNum = 0;
-        //for (unsigned i = 0; i < count && CanReadRom(core, static_cast<unsigned>(spriteLoad - core.rom), 1); ++i) {
-        //    const unsigned index = *spriteLoad++;
-        //    const unsigned spriteCount = ReadByteAt(core, EV_SPRITE_SLOT_COUNT + index);
-        //    const unsigned currentGfxOffset = ReadWordAt(core, SPRITE_IDENTIFIER + 3 * index);
-        //    if (gfxOffset == currentGfxOffset) {
-        //        slotOffset = ReadWordAt(core, 0x819534 + 0x13A0 + 2 * slotNum);
-        //        return true;
-        //    }
-        //    slotNum += spriteCount;
+        //switch (event.eventId & 0xFF) {
+        //case 0x01:
+        //    event_2_eva = 0x0b;   // pillar    
+        //    break;
+        //case 0x11:
+        //case 0x12:       
+        //    event_2_eva = 0x12;   // skellys   
+        //    break;
+        ////case 0x14:
+        ////    event_2_eva = 0x37;   // pillar  just one slot!
+        ////    break;
+        //case 0x4e:
+        //    event_2_eva = 0x0c;   // hanging bat  
+        //case 0x4f:
+        //case 0x50:
+        //case 0x51:
+        //    event_2_eva = 0x4c;   // fishman 
+        //    break;
+        //case 0x57:
+        //    event_2_eva = 0x58;   // harpies    
+        //    break;
+        ////case 0x14:
+        ////    event_2_eva = 0x2e;   // moon bats   
+        ////    break;
+        //case 0x18: // items
+        //case 0x19:
+        //case 0x1a:
+        //case 0x1b:
+        //case 0x1c:
+        //case 0x1d:
+        //case 0x1e:
+        //case 0x1f:
+        //case 0x20:
+        //case 0x21:
+        //case 0x22:
+        //case 0x23:
+        //case 0x24:
+        //case 0x25:
+        //case 0x26:
+        //case 0x27:
+        //case 0x28:
+        //case 0x0e:                  // candle
+        //case 0x53:                  // axe of knight  
+        //    slotOffset = 0;        
+        //    return true;
+        //default:
+        //    break;
         //}
-        //return false;
+        //
+        //// Just add slot number of current event loaded in order.     
+        //unsigned int tablePointer = (ReadWordAt(core, (0x868BCD + 2 * core.level)) | 0x860000);
+        //unsigned int tableSize = ReadByteAt(core, tablePointer);                    // first bytes = size
+        //unsigned int index_ID_ta = 0;
+        //unsigned int sloted_ID = 0;
+        //unsigned int slotSize = 0; 
+        //unsigned int slotNum = 0;
+        //
+        //tableSize++;
+        //for (tableSize != 0; --tableSize;) {
+        //    index_ID_ta++;
+        //    
+        //    sloted_ID = ReadByteAt(core, tablePointer + index_ID_ta);
+        //    if (sloted_ID == event_2_eva) {                          
+        //        slotOffset = ReadWordAt(core, 0x81A8D4 + slotNum * 2);
+        //        return true;                                                       // current event is in this slot so we can return. 
+        //    }
+        //    slotSize = ReadByteAt(core, 0x81AA80 + sloted_ID);
+        //    if (slotSize != 0xFF) {
+        //        slotNum += slotSize;                                               // only cont event with GFXslot content 
+        //    } 
+        //}                                                                      
+        //
+        //if (tableSize == 0) {
+        //    return false;
+        //}
+
+        // This emulates what SC4 does in game 
+        const unsigned gfxOffset = ReadWordAt(core, SPRITE_IDENTIFIER + 3 * (event.eventId & 0xFF));
+        const unsigned levelOffset = ReadWordAt(core, ENEMY_SET_GFX + 2 * core.level);
+        const unsigned spriteLoadPc = SNESCore::snes2pc(static_cast<int>(0x860000 + levelOffset));
+        if (!gfxOffset || !CanReadRom(core, spriteLoadPc, 1)) {
+            return false;
+        }
+        
+        const BYTE* spriteLoad = core.rom + spriteLoadPc;
+        const unsigned count = *spriteLoad++;
+        unsigned slotNum = 0;
+        for (unsigned i = 0; i < count && CanReadRom(core, static_cast<unsigned>(spriteLoad - core.rom), 1); ++i) {
+            const unsigned index = *spriteLoad++;
+            const unsigned spriteCount = ReadByteAt(core, EV_SPRITE_SLOT_COUNT + index);
+            const unsigned currentGfxOffset = ReadWordAt(core, SPRITE_IDENTIFIER + 3 * index);
+            if (gfxOffset == currentGfxOffset) {
+                slotOffset = ReadWordAt(core, 0x819534 + 0x13A0 + 2 * slotNum);
+                return true;
+            }
+            slotNum += spriteCount;
+        }
+        return false;
     
 
     }
@@ -1879,6 +1886,90 @@ namespace {
         drawList->AddRect(min, max, IM_COL32(92, 92, 102, 255));
     }
 
+    static void DrawSpriteAssembly(SC4Core& core)
+    {
+        constexpr unsigned startAddress = 0xC000;
+        constexpr unsigned endAddress = 0x10000;
+        constexpr unsigned bytesPerTile = 0x20;
+        constexpr unsigned tileCount = (endAddress - startAddress) / bytesPerTile;
+        constexpr unsigned columns = 16;
+        const unsigned rows = (tileCount + columns - 1) / columns;
+        //todo 
+        //read sprite assembly animation tables.
+        //read slot offset 
+        //preview current sprite and have the comonents draw a overlay on the VRAM cache.
+		//have edit fields for sprite property xPos, yPos, size (16x16) (8x8) palette, hFlip, vFlip, and tile index.
+        //update sprite viewing in any editor to read from data bank. 
+
+
+
+        ImGui::Text("VRAM cache %04X-%04X", startAddress, endAddress - 1);
+        ImGui::SameLine();
+        ImGui::TextUnformatted("Zoom");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(72.0f);
+        ImGui::SliderInt("##vram-cache-zoom", &g_vramCacheZoom, 1, 8, "%d");
+        g_vramCacheZoom = std::clamp(g_vramCacheZoom, 1, 8);
+        ImGui::SameLine();
+        ImGui::TextUnformatted("Palette");
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(64.0f);
+        ImGui::InputInt("##vram-cache-palette", &g_vramCachePalette, 1, 1);
+        g_vramCachePalette = std::clamp(g_vramCachePalette, 0, 8);
+
+        const float tileSize = 8.0f * static_cast<float>(g_vramCacheZoom);
+        const ImVec2 canvasSize(tileSize * columns, tileSize * rows);
+        ImGui::BeginChild("sprite-vram-cache", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+        const ImVec2 canvasMin = ImGui::GetCursorScreenPos();
+        ImGui::Dummy(canvasSize);
+
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        DrawChecker(drawList, canvasMin, ImVec2(canvasMin.x + canvasSize.x, canvasMin.y + canvasSize.y), tileSize / 8.0f);
+
+        const unsigned cacheBase = startAddress * 2;
+        if (cacheBase + tileCount * 0x40 <= sizeof(core.vramCache)) {
+            for (unsigned tile = 0; tile < tileCount; ++tile) {
+                const unsigned tileX = tile % columns;
+                const unsigned tileY = tile / columns;
+                const BYTE* pixels = core.vramCache + cacheBase + tile * 0x40;
+                const ImVec2 tileMin(
+                    canvasMin.x + tileX * tileSize,
+                    canvasMin.y + tileY * tileSize);
+
+                for (unsigned y = 0; y < 8; ++y) {
+                    for (unsigned x = 0; x < 8; ++x) {
+                        const BYTE value = pixels[x + y * 8] & 0xF;
+                        if (value == 0) {
+                            continue;
+                        }
+                        const ImVec2 pixelMin(
+                            tileMin.x + x * g_vramCacheZoom,
+                            tileMin.y + y * g_vramCacheZoom);
+                        drawList->AddRectFilled(
+                            pixelMin,
+                            ImVec2(pixelMin.x + g_vramCacheZoom, pixelMin.y + g_vramCacheZoom),
+                            ToImColor(core, g_vramCachePalette, value));
+                    }
+                }
+
+                drawList->AddRect(tileMin, ImVec2(tileMin.x + tileSize, tileMin.y + tileSize), IM_COL32(72, 72, 78, 180));
+            }
+        }
+
+        if (ImGui::IsItemHovered()) {
+            const ImVec2 mouse = ImGui::GetIO().MousePos;
+            const int tileX = static_cast<int>((mouse.x - canvasMin.x) / tileSize);
+            const int tileY = static_cast<int>((mouse.y - canvasMin.y) / tileSize);
+            if (tileX >= 0 && tileX < static_cast<int>(columns) && tileY >= 0 && tileY < static_cast<int>(rows)) {
+                const unsigned tile = static_cast<unsigned>(tileY * columns + tileX);
+                if (tile < tileCount) {
+                    ImGui::SetTooltip("VRAM %04X  tile %03X", startAddress + tile * bytesPerTile, tile);
+                }
+            }
+        }
+        ImGui::EndChild();
+    }
+
     static void DrawSpriteCanvas(EditorState& state, HWND hwnd, const SpriteEntry& sprite)
     {
         SC4Core& core = state.session.Core();
@@ -2141,6 +2232,7 @@ namespace {
         ImGui::EndChild();
     }
 
+
 } // namespace
 
 void DrawSpriteEditor(EditorState& state, HWND hwnd)
@@ -2159,7 +2251,10 @@ void DrawSpriteEditor(EditorState& state, HWND hwnd)
             ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
         const ImGuiTabItemFlags playerPlayer = state.restoreSpriteTab && restoredSpriteTab == 2
             ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-        
+        const ImGuiTabItemFlags vramCache = state.restoreSpriteTab && restoredSpriteTab == 3
+            ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+
+
         if (ImGui::BeginTabItem("Global", nullptr, globalFlags)) {
             if (!state.restoreSpriteTab || restoredSpriteTab == 0) {
                 state.activeSpriteTab = 0;
@@ -2295,6 +2390,16 @@ void DrawSpriteEditor(EditorState& state, HWND hwnd)
                 ImGui::EndTable();
                 ImGui::EndChild();
            ImGui::EndTabItem();
+        }
+        
+        if (ImGui::BeginTabItem("Sprite Assembly Editor", nullptr, vramCache)) {
+            if (!state.restoreSpriteTab || restoredSpriteTab == 3) {
+                state.activeSpriteTab = 3;
+                state.restoreSpriteTab = false;
+            }
+
+            DrawSpriteAssembly(core);
+            ImGui::EndTabItem();
         }
         
 

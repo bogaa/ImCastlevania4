@@ -869,10 +869,10 @@ unsigned ExtendedSongPacketPc(int slot) {
 
 bool AddExpandedSong(SC4Core& core, int& addedSongId, std::string& error) {
     addedSongId = -1;
-    if (!core.rom || !core.expandedROM || core.romSize < 0x400000 || core.type != 0) {
-        error = "New songs require an expanded Super Castlevania IV ROM.";
-        return false;
-    }
+    //if (!core.rom || !core.expandedROM || core.romSize < 0x400000 || core.type != 0) {
+    //    error = "New songs require an expanded Super Castlevania IV ROM.";
+    //    return false;
+    //}
 
     const unsigned tableSnes = core.region == 0 ? 0x81B610 : 0x81B5DA;
     const unsigned tablePc = SNESCore::snes2pc(tableSnes);
@@ -949,10 +949,10 @@ bool AddExpandedSong(SC4Core& core, int& addedSongId, std::string& error) {
 }
 
 bool ApplySong(SC4Core& core, Song& song, std::string& error) {
-    if (!core.expandedROM || song.packetPc < 0x100000) { error = "Expand the ROM before replacing music."; return false; }
-    if (song.packetPc + 3 > core.romSize || core.rom[song.packetPc + 2] != 0x80) {
-        error = "This music packet is not in the editable expanded format."; return false;
-    }
+    //if (!core.expandedROM || song.packetPc < 0x100000) { error = "Expand the ROM before replacing music."; return false; }
+    //if (song.packetPc + 3 > core.romSize || core.rom[song.packetPc + 2] != 0x80) {
+    //    error = "This music packet is not in the editable expanded format."; return false;
+    //}
     const std::vector<uint8_t> sequence = CompileSequence(song);
     const size_t needed = sequence.size();
     // Expanded packets are stored as one literal control byte followed by their unpacked bytes.
@@ -966,9 +966,9 @@ bool ApplySong(SC4Core& core, Song& song, std::string& error) {
 }
 
 bool ApplyTempo(SC4Core& core, Song& song, std::string& error) {
-    if (!core.expandedROM || song.packetPc < 0x100000 || core.rom[song.packetPc + 2] != 0x80) {
-        error = "Expand the ROM before changing music."; return false;
-    }
+    //if (!core.expandedROM || song.packetPc < 0x100000 || core.rom[song.packetPc + 2] != 0x80) {
+    //    error = "Expand the ROM before changing music."; return false;
+    //}
     if (song.tempoOffsets.empty()) { error = "No tempo command was found in this song."; return false; }
     const uint8_t tempo = static_cast<uint8_t>(std::clamp(song.tempo, 1, 255));
     for (const size_t offset : song.tempoOffsets) {
@@ -980,9 +980,9 @@ bool ApplyTempo(SC4Core& core, Song& song, std::string& error) {
 }
 
 bool ApplyInstruments(SC4Core& core, Song& song, std::string& error) {
-    if (!core.expandedROM || song.packetPc < 0x100000 || core.rom[song.packetPc + 2] != 0x80) {
-        error = "Expand the ROM before changing music."; return false;
-    }
+    //if (!core.expandedROM || song.packetPc < 0x100000 || core.rom[song.packetPc + 2] != 0x80) {
+    //    error = "Expand the ROM before changing music."; return false;
+    //}
     int patched = 0;
     for (int track=0; track<song.trackCount; ++track) {
         const uint8_t instrument=static_cast<uint8_t>(std::clamp(song.instruments[track],0,255));
@@ -998,10 +998,10 @@ bool ApplyInstruments(SC4Core& core, Song& song, std::string& error) {
 }
 
 bool ApplyTrackVolumes(SC4Core& core, Song& song, std::string& error) {
-    if (!core.expandedROM || song.packetPc < 0x100000 || core.rom[song.packetPc + 2] != 0x80) {
-        error = "Expand the ROM before changing music.";
-        return false;
-    }
+    //if (!core.expandedROM || song.packetPc < 0x100000 || core.rom[song.packetPc + 2] != 0x80) {
+    //    error = "Expand the ROM before changing music.";
+    //    return false;
+    //}
     int patched = 0;
     for (int track = 0; track < song.trackCount; ++track) {
         const uint8_t volume = static_cast<uint8_t>(std::clamp(song.trackVolumes[track], 0, 255));
@@ -1074,7 +1074,7 @@ void DrawPianoRoll(Song& song, int& selected, std::set<int>& selectedNotes, int&
     const float row = 6.0f, markerRow = 18.0f;
     const float markerHeight = (std::max)(1, song.trackCount) * markerRow + 6.0f;
     const float width = (std::max)(600.0f, endTick * scale);
-    ImGui::BeginChild("music-roll", ImVec2(0, 300), true, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("music-roll", ImVec2(0, 500), true, ImGuiWindowFlags_HorizontalScrollbar);
     const ImVec2 origin = ImGui::GetCursorScreenPos();
     ImGui::InvisibleButton("music-canvas", ImVec2(width, markerHeight + 96 * row));
     ImDrawList* dl = ImGui::GetWindowDrawList();
@@ -1152,47 +1152,15 @@ void DrawPianoRoll(Song& song, int& selected, std::set<int>& selectedNotes, int&
 
 } // namespace
 
-
-/*
-// Try to do tabs for music and instrument
-SC4Core& core = state.session.Core();
-ImGui::BeginTabBar("Music-Editor-Tabs")) {
-    
-    const int restoredMusicTab = state.activeMusicTab;
-    const ImGuiTabItemFlags musicFlags = state.restoreMusicTab && restoredMusicTab == 0
-        ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-    const ImGuiTabItemFlags instrumentFlags = state.restoreMusicTab && restoredMusicTab == 1
-        ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
-
-    if (ImGui::BeginTabItem("Music", nullptr, globalFlags)) {
-        if (!state.restoreMusicTab || restoredMusicTab == 0) {
-
-
-
-        }
-
-        ImGui::EndTabItem();
-    }
-    if (ImGui::BeginTabItem("Instrument", nullptr, levelFlags)) {
-        if (!state.restoreMusicTab || restoredMusicTab == 1) {
-
-
-
-        }
-
-        ImGui::EndTabItem();
-    }
-*/
-
 void ResetMusicEditor() { g = {}; }
 
 void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
-    if (!state.session.IsLoaded()) { ImGui::TextUnformatted("Load a ROM to edit music."); return; }
+    if (!state.session.IsLoaded()) { ImGui::TextDisabled("Load a ROM to edit music."); return; }
     SC4Core& core = state.session.Core();
     if (g.rom != core.rom) { g = {}; g.rom = core.rom; LoadSong(core, g.songId, g.song); }
     ImGui::SetNextItemWidth(90);
     int songId = g.songId;
-    if (ImGui::InputInt("Song ID", &songId)) {
+    if (ImGui::InputInt("Select Song ID |", &songId)) {
         g.songId = std::clamp(songId, 0, kSongCount-1); g.selectedNote = -1; g.selectedNotes.clear(); g.selectedInstrumentChange = -1;
         if (!LoadSong(core, g.songId, g.song)) g.status = "Could not decode this song packet.";
     }
@@ -1217,6 +1185,7 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
             logMessage = "Add song failed: " + error;
         }
     }
+    ImGui::SameLine();
     if (ImGui::Button("Import MIDI")) {
         const std::string path = MidiDialog(hwnd, false);
         if (!path.empty()) {
@@ -1229,8 +1198,13 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
                 for (int track = 0; track < g.pendingImport.trackCount; ++track)
                     g.importTrackTargets[track] = track < 8 ? track + 1 : 0;
                 ImGui::OpenPopup("MIDI Track Mapping");
-            } else { g.status = error; logMessage = "Music import failed: " + error; }
+            }
+            else { g.status = error; logMessage = "Music import failed: " + error; }
         }
+    }
+    if (ImGui::Button("Export MIDI")) {
+        const std::string path = MidiDialog(hwnd, true);
+        if (!path.empty()) { g.status = ExportMidi(g.song, path) ? "MIDI exported: " + path : "Could not write MIDI file."; logMessage = g.status; }
     }
     if (g.hasPendingImport) ImGui::OpenPopup("MIDI Track Mapping");
     ImGui::SetNextWindowSize(ImVec2(560, 0), ImGuiCond_Appearing);
@@ -1238,10 +1212,14 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
         ImGui::TextUnformatted("Choose where each imported voice will go.");
         ImGui::Separator();
         static const ImVec4 trackColors[8] = {
-            ImVec4(70/255.f,150/255.f,240/255.f,1), ImVec4(240/255.f,95/255.f,90/255.f,1),
-            ImVec4(80/255.f,190/255.f,115/255.f,1), ImVec4(235/255.f,190/255.f,65/255.f,1),
-            ImVec4(185/255.f,105/255.f,230/255.f,1), ImVec4(65/255.f,195/255.f,200/255.f,1),
-            ImVec4(240/255.f,125/255.f,55/255.f,1), ImVec4(180/255.f,180/255.f,190/255.f,1)
+            ImVec4(70/255.f,150/255.f,240/255.f,1), 
+            ImVec4(240/255.f,95/255.f,90/255.f,1),
+            ImVec4(80/255.f,190/255.f,115/255.f,1), 
+            ImVec4(235/255.f,190/255.f,65/255.f,1),
+            ImVec4(185/255.f,105/255.f,230/255.f,1), 
+            ImVec4(65/255.f,195/255.f,200/255.f,1),
+            ImVec4(240/255.f,125/255.f,55/255.f,1), 
+            ImVec4(180/255.f,180/255.f,190/255.f,1)
         };
         const char* destinations[] = {"Skip", "Track 1", "Track 2", "Track 3", "Track 4", "Track 5", "Track 6", "Track 7", "Track 8"};
         ImGui::BeginChild("##midi_voices", ImVec2(0, 360), ImGuiChildFlags_Borders);
@@ -1322,11 +1300,6 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
         ImGui::EndPopup();
     }
     ImGui::SameLine();
-    if (ImGui::Button("Export MIDI")) {
-        const std::string path = MidiDialog(hwnd, true);
-        if (!path.empty()) { g.status = ExportMidi(g.song,path) ? "MIDI exported: "+path : "Could not write MIDI file."; logMessage = g.status; }
-    }
-    ImGui::SameLine();
     if (ImGui::Button("Reload Song")) { LoadSong(core,g.songId,g.song); g.selectedNote=-1; g.selectedNotes.clear(); g.selectedInstrumentChange=-1; g.status="Reloaded song from ROM."; }
     ImGui::SameLine();
     if (ImGui::Button("Rebuild Notes to ROM")) {
@@ -1345,6 +1318,7 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
         } else { g.status = error; logMessage = "Music apply failed: " + error; }
     }
     ImGui::SameLine(); ImGui::SetNextItemWidth(120); ImGui::SliderFloat("Zoom", &g.pixelsPerTick, 0.15f, 2.0f, "%.2f");
+    ImGui::Separator();
     ImGui::SetNextItemWidth(90);
     if (ImGui::InputInt("Tempo", &g.song.tempo)) g.song.tempo = std::clamp(g.song.tempo, 1, 255);
     ImGui::SameLine();
@@ -1357,7 +1331,7 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
             g.status = "Tempo applied without rebuilding the song. Save ROM to keep it."; logMessage = g.status;
         } else { g.status = error; logMessage = "Tempo apply failed: " + error; }
     }
-    ImGui::SameLine();
+    
     ImGui::SetNextItemWidth(90);
     if (ImGui::InputInt("Loop start", &g.song.loopStartTick))
         g.song.loopStartTick = (std::max)(0, g.song.loopStartTick);
@@ -1387,9 +1361,9 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
             logMessage = g.status;
         }
     }
-    ImGui::TextUnformatted("Replace every change on track:");
-    static const ImVec4 instrumentTrackColors[8] = {
-        {70.0f / 255.0f, 150.0f / 255.0f, 240.0f / 255.0f, 1.0f},
+    ImGui::Separator();
+    static const ImVec4 instrumentTrackColors[8] = {   
+        {80.0f / 255.0f, 150.0f / 255.0f, 240.0f / 255.0f, 1.0f},
         {240.0f / 255.0f, 95.0f / 255.0f, 90.0f / 255.0f, 1.0f},
         {80.0f / 255.0f, 190.0f / 255.0f, 115.0f / 255.0f, 1.0f},
         {235.0f / 255.0f, 190.0f / 255.0f, 65.0f / 255.0f, 1.0f},
@@ -1404,16 +1378,17 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
         ImGui::BeginGroup();
         ImGui::ColorButton("##track_color", instrumentTrackColors[track],
             ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoPicker,
-            ImVec2(54.0f, 4.0f));
+            ImVec2(54.0f, 10.0f));
         ImGui::SetNextItemWidth(54.0f);
         ImGui::InputInt("##instrument", &g.song.instruments[track], 0, 0);
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Track %d: %d - %s\nReplace every instrument change on this track",
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Instrument for the whole track %d: %d - %s",
             track + 1, g.song.instruments[track], CvInstrumentName(g.song.instruments[track]));
         ImGui::EndGroup();
         ImGui::PopID();
     }
     ImGui::SameLine();
-    if (ImGui::Button("Replace All on Tracks")) {
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 18.0f);
+    if (ImGui::Button("Replace All")) {
         std::string error;
         RomUndoSnapshot beforeInstruments=state.session.CreateUndoSnapshot(state.selectedEventIndex);
         if (ApplyInstruments(core,g.song,error)) {
@@ -1423,12 +1398,15 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
             g.status="Track instruments applied without rebuilding the song. Save ROM to keep them."; logMessage=g.status;
         } else { g.status=error; logMessage="Instrument apply failed: "+error; }
     }
+    ImGui::SameLine();
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 18.0f);
+    ImGui::TextUnformatted("Replace every instrument change on this tracks");
     for (int track = 0; track < g.song.trackCount; ++track) {
         if (track) ImGui::SameLine();
         ImGui::TextColored(instrumentTrackColors[track], "T%d: %s", track + 1,
             CvInstrumentName(g.song.instruments[track]));
-    }
-    ImGui::TextUnformatted("Track volume:");
+    }    
+    ImGui::Separator(); // ImGui::TextUnformatted("Track volume:");
     for (int track = 0; track < g.song.trackCount; ++track) {
         if (track) ImGui::SameLine();
         ImGui::PushID(1000 + track);
@@ -1457,16 +1435,6 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
             g.status = "Track volume apply failed: " + error;
             logMessage = g.status;
         }
-    }
-    for (int track = 0; track < g.song.trackCount; ++track) {
-        std::string ids;
-        for (const int id : g.song.originalInstrumentIds[track]) {
-            if (!ids.empty()) ids += ", ";
-            ids += std::to_string(id) + " " + CvInstrumentName(id);
-        }
-        ImGui::Text("Track %d original IDs: %s", track + 1, ids.empty() ? "none" : ids.c_str());
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Instrument IDs confirmed in this track when the song was loaded");
     }
     if (!g.status.empty()) ImGui::TextWrapped("%s",g.status.c_str());
     if (g.song.loopCount > 0)
@@ -1558,4 +1526,20 @@ void DrawMusicEditor(EditorState& state, HWND hwnd, std::string& logMessage) {
     if (ImGui::Button("Add Note")) {
         g.song.notes.push_back({0,0,48,60,100,g.song.instruments[0]}); g.selectedNotes.clear(); g.selectedNote=static_cast<int>(g.song.notes.size())-1;
     }
+
+    if (ImGui::CollapsingHeader("Info", ImGuiTreeNodeFlags_DefaultOpen)) {
+        for (int track = 0; track < g.song.trackCount; ++track) {
+            std::string ids;
+            for (const int id : g.song.originalInstrumentIds[track]) {
+                if (!ids.empty()) ids += ", ";
+                ids += std::to_string(id) + " " + CvInstrumentName(id);
+            }
+            ImGui::Text("Track %d original IDs: %s", track + 1, ids.empty() ? "none" : ids.c_str());
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("Instrument IDs confirmed in this track when the song was loaded");
+        }
+
+    }
+
+
 }

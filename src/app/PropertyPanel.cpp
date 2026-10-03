@@ -53,24 +53,156 @@ namespace {
     static constexpr unsigned LEVEL_ALWAYS_3SCRL = 0x85BD80;
 
     // data tables event   
+    static constexpr unsigned SECOND_QUEST_DAMAGE = 0x80D3FF;
     static constexpr unsigned SUBWEAPON_DAMAGE_BASE = 0x81A6F8;
+    static constexpr unsigned SUBWEAPON_COST_BASE = 0x819255;
     static constexpr unsigned EVENT_BREAKABLE_WALL_ITEM_BASE = 0x81A81A;
     static constexpr unsigned EVENT_HITBOX_BASE = 0x81AB00;
     static constexpr unsigned EVENT_HEALTH_BASE = 0x81AC00;
     static constexpr unsigned EVENT_HIT_ATTRIBUTE_BASE = 0x81AD00;  // 01 hurt, 04 whip hitable, 08 collect able also needs bit 01 set, 10 ??, 20 ??, 40 rossery, 80 noDespawn 
     static constexpr unsigned EVENT_DEATH_ANIMATION_BASE = 0x81AE00;
     static constexpr unsigned EVENT_DEATH_MOVBITS_BASE = 0x81AE80;
-    static constexpr unsigned EVENT_DAMAGE_BASE = 0x81af00;
+    static constexpr unsigned EVENT_DAMAGE_BASE = 0x81AF00;
     static constexpr unsigned EVENT_SLOT_SIZE = 0x81AA80;
-    static constexpr unsigned RING_CONVEYOR_X = 0x81fcbe;
-    static constexpr unsigned RING_CONVEYOR_Y = 0x81fcc0;
+    static constexpr unsigned RING_CONVEYOR_X = 0x81FCBE;
+    static constexpr unsigned RING_CONVEYOR_Y = 0x81FCC0;
 
 
     // expansion 
     static constexpr unsigned EXP_LEVEL_TRANSIT = 0xA0C000;         // AA BB    AA = level BB = checkpoint. 8 Enteries
     static constexpr unsigned EXP_EV15_Exit = 0xA68000;             // AB CC    A = Type, B = transitionID CC = CMP pos. 0x3F Entries  
 
-
+    /*
+    std::array<const unsigned, 640> ENEMY_GFX = {
+       NULL, 0xF3CA5D, 0xA8861D, 0xAAAB7D, NULL,            // 00 ,items, lvl0_GFX, dirt , , ,  
+       NULL, NULL, NULL, NULL, NULL,                        // 01 
+       NULL, NULL, NULL, NULL, NULL,                        // 02       
+       0xA8C67D, 0xC6F0FD, 0xE5CA3D, 0xDCDB5D, NULL,        // 03           
+       0xA8D23D, NULL, NULL, NULL, NULL,                    // 04  
+       NULL, NULL, NULL, NULL, NULL,                        // 05       
+       0xBFD9DD, 0xC6EE5D, NULL, NULL, NULL,                // 06    
+       0xAFC03D, NULL, NULL, NULL, NULL,                    // 07
+       0xAEA57D, NULL, NULL, NULL, NULL,                    // 08
+       0xB0D67D, NULL, NULL, NULL, NULL,                    // 09
+       0xAEAE3D, NULL, NULL, NULL, NULL,                    // 0a    
+       0xABEE1D, NULL, NULL, NULL, NULL,                    // 0b
+       0xAA979D, NULL, NULL, NULL, NULL,                    // 0c
+       0xC9E07D, NULL, NULL, NULL, NULL,                    // 0d
+       NULL, NULL, NULL, NULL, NULL,                        // 0e
+       0xCF8ADD, NULL, NULL, NULL, NULL,                    // 0f
+       0xB0DADD, NULL, NULL, NULL, NULL,                    // 10       
+       0xAA9BFD, NULL, NULL, NULL, NULL,                    // 11 12 56
+       0xB0DADD, NULL, NULL, NULL, NULL,                    // 12  
+       NULL, NULL, NULL, NULL, NULL,                        // 13       
+       0xA8CA9D, NULL, NULL, NULL, NULL,                    // 14 2e
+       NULL, NULL, NULL, NULL, NULL,                        // 15       
+       0xC0DE1D, NULL, NULL, NULL, NULL,                    // 16 46 60 61
+       0xB2B05D, 0xCFDB5D, NULL, NULL, NULL,                // 17
+       NULL, NULL, NULL, NULL, NULL,                        // 18
+       NULL, NULL, NULL, NULL, NULL,                        // 19
+       NULL, NULL, NULL, NULL, NULL,                        // 1a
+       NULL, NULL, NULL, NULL, NULL,                        // 1b
+       NULL, NULL, NULL, NULL, NULL,                        // 1c
+       NULL, NULL, NULL, NULL, NULL,                        // 1d
+       NULL, NULL, NULL, NULL, NULL,                        // 1e
+       NULL, NULL, NULL, NULL, NULL,                        // 1f
+       NULL, NULL, NULL, NULL, NULL,                        // 20
+       NULL, NULL, NULL, NULL, NULL,                        // 21
+       NULL, NULL, NULL, NULL, NULL,                        // 22       
+       0xAEA1DD, NULL, NULL, NULL, NULL,                    // 23
+       NULL, NULL, NULL, NULL, NULL,                        // 24
+       NULL, NULL, NULL, NULL, NULL,                        // 25
+       NULL, NULL, NULL, NULL, NULL,                        // 26
+       NULL, NULL, NULL, NULL, NULL,                        // 27
+       NULL, NULL, NULL, NULL, NULL,                        // 28
+       NULL, NULL, NULL, NULL, NULL,                        // 29
+       NULL, NULL, NULL, NULL, NULL,                        // 2a
+       NULL, NULL, NULL, NULL, NULL,                        // 2b
+       0xBCF05D, NULL, NULL, NULL, NULL,                    // 2c
+       NULL, NULL, NULL, NULL, NULL,                        // 2d
+       NULL, NULL, NULL, NULL, NULL,                        // 2e
+       NULL, NULL, NULL, NULL, NULL,                        // 2f
+       0xB2B31D, NULL, NULL, NULL, NULL,                    // 30
+       0xBBDE9D, NULL, NULL, NULL, NULL,                    // 31
+       NULL, NULL, NULL, NULL, NULL,                        // 32
+       0xC98FBD, NULL, NULL, NULL, NULL,                    // 33 7b        
+       0xB69F9D, NULL, NULL, NULL, NULL,                    // 34 78 79   
+       0xB2B6BD, NULL, NULL, NULL, NULL,                    // 35
+       0xBDFE3D, NULL, NULL, NULL, NULL,                    // 36    
+       NULL, NULL, NULL, NULL, NULL,                        // 37
+       NULL, NULL, NULL, NULL, NULL,                        // 38
+       0xB9BF9D, NULL, NULL, NULL, NULL,                    // 39 6a
+       0xB7F7DD, NULL, NULL, NULL, NULL,                    // 3a 
+       0xAFBC1D, NULL, NULL, NULL, NULL,                    // 3b 4a 67 
+       0xB0CE1D, NULL, NULL, NULL, NULL,                    // 3c 
+       NULL, NULL, NULL, NULL, NULL,                        // 3d       
+       0xB4817D, NULL, NULL, NULL, NULL,                    // 3e
+       0xB69B7D, NULL, NULL, NULL, NULL,                    // 3f    
+       0xBCEC1D, NULL, NULL, NULL, NULL,                    // 40
+       NULL, NULL, NULL, NULL, NULL,                        // 41
+       0xCCABDD, NULL, NULL, NULL, NULL,                    // 42 
+       0xB0EA1D, NULL, NULL, NULL, NULL,                    // 43    
+       0xB6971D, NULL, NULL, NULL, NULL,                    // 44 45 64
+       NULL, NULL, NULL, NULL, NULL,                        // 45
+       NULL, NULL, NULL, NULL, NULL,                        // 46
+       NULL, NULL, NULL, NULL, NULL,                        // 47
+       NULL, NULL, NULL, NULL, NULL,                        // 48
+       NULL, NULL, NULL, NULL, NULL,                        // 49
+       0xC7F63D, NULL, NULL, NULL, NULL,                    // 4a 
+       0xB6ABFD, NULL, NULL, NULL, NULL,                    // 4b     
+       0xB9C2BD, NULL, NULL, NULL, NULL,                    // 4c 4f 50 51
+       0xC88A1D, NULL, NULL, NULL, NULL,                    // 4d
+       NULL, NULL, NULL, NULL, NULL,                        // 4e
+       NULL, NULL, NULL, NULL, NULL,                        // 4f
+       NULL, NULL, NULL, NULL, NULL,                        // 50
+       NULL, NULL, NULL, NULL, NULL,                        // 51
+       0xC5C27D, NULL, NULL, NULL, NULL,                    // 52 53
+       NULL, NULL, NULL, NULL, NULL,                        // 53       
+       0xC5BADD, NULL, NULL, NULL, NULL,                    // 54
+       NULL, NULL, NULL, NULL, NULL,                        // 55
+       0xDCDF7D, NULL, NULL, NULL, NULL,                    // 56
+       0xC2A6FD, NULL, NULL, NULL, NULL,                    // 57 58
+       NULL, NULL, NULL, NULL, NULL,                        // 58
+       0xCDF91D, NULL, NULL, NULL, NULL,                    // 59
+       0xC7FA1D, NULL, NULL, NULL, NULL,                    // 5a
+       0xC885BD, NULL, NULL, NULL, NULL,                    // 5b 
+       0xCBDA5D, NULL, NULL, NULL, NULL,                    // 5c    
+       0xB9CF1D, 0xDCEEFD, NULL, NULL, NULL,                // 5d 5e , dublicated
+       NULL, NULL, NULL, NULL, NULL,                        // 5e
+       NULL, NULL, NULL, NULL, NULL,                        // 5f
+       NULL, NULL, NULL, NULL, NULL,                        // 60
+       NULL, NULL, NULL, NULL, NULL,                        // 61
+       0xD3F85D, NULL, NULL, NULL, NULL,                    // 62
+       0xD89B7D, 0xDCD39D, NULL, NULL, NULL,                // 63 , dublicated
+       NULL, NULL, NULL, NULL, NULL,                        // 64
+       NULL, NULL, NULL, NULL, NULL,                        // 65
+       0xB0C5BD, NULL, NULL, NULL, NULL,                    // 66
+       NULL, NULL, NULL, NULL, NULL,                        // 67       
+       0xD0DF5D, NULL, NULL, NULL, NULL,                    // 68
+       0xCACD9D, NULL, NULL, NULL, NULL,                    // 69
+       NULL, NULL, NULL, NULL, NULL,                        // 6a       
+       0xD0E37D, NULL, NULL, NULL, NULL,                    // 6b
+       NULL, NULL, NULL, NULL, NULL,                        // 6c       
+       0xB7FABD, NULL, NULL, NULL, NULL,                    // 6d 
+       0xB48DBD, NULL, NULL, NULL, NULL,                    // 6e    
+       0xAEA9DD, NULL, NULL, NULL, NULL,                    // 6f 71
+       0xB0E23D, NULL, NULL, NULL, NULL,                    // 70
+       NULL, NULL, NULL, NULL, NULL,                        // 71
+       0xB9D73D, NULL, NULL, NULL, NULL,                    // 72    
+       0xACF7FD, NULL, NULL, NULL, NULL,                    // 73    
+       0xD1F15D, NULL, NULL, NULL, NULL,                    // 74
+       0xCF8E3D, NULL, NULL, NULL, NULL,                    // 75
+       0xCC9F5D, NULL, NULL, NULL, NULL,                    // 76
+       NULL, NULL, NULL, NULL, NULL,                        // 77
+       NULL, NULL, NULL, NULL, NULL,                        // 78
+       NULL, NULL, NULL, NULL, NULL,                        // 79
+       NULL, NULL, NULL, NULL, NULL,                        // 7a
+       NULL, NULL, NULL, NULL, NULL,                        // 7b
+       0xDFBEBD, 0xDEB8FD, NULL, NULL, NULL,                // 7c
+       0xE4999D, NULL, NULL, NULL, NULL,                    // 7d
+       0xE38BBD, 0xE5CE5D, NULL, NULL, NULL,                // 7e 
+       0xE5BDDD, NULL, NULL, NULL, NULL,                    // 7f
+    };  */
     
     // routines
     // static constexpr unsigned TRIPLE_SHOT_PICKUP_JML = 0x80DFA3;
@@ -1354,6 +1486,117 @@ namespace {
                     }                                                             
             }
 
+            if (event->eventId == 0x16) {
+                if (event->eventSubId == 0x0) {
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P1 Timer", 2, { 0x81c11b }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c11d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd", 2, { 0x81c11f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c121 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd", 2, { 0x81c123 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer", 2, { 0x81c125 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c127 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd", 2, { 0x81c129 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c12b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd", 2, { 0x81c12d }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P3 Timer", 2, { 0x81c12f }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81c131 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpd", 2, { 0x81c133 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81c135 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpd", 2, { 0x81c137 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                }
+                if (event->eventSubId == 0x1) {
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P1 Timer", 2, { 0x81c13b }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c13d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd", 2, { 0x81c13f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c141 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd", 2, { 0x81c143 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer", 2, { 0x81c145 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c147 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd", 2, { 0x81c149 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c14b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd", 2, { 0x81c14d }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P3 Timer", 2, { 0x81c14f }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81c151 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpd", 2, { 0x81c153 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81c155 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpd", 2, { 0x81c157 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                }
+                if (event->eventSubId == 0x2 || event->eventSubId == 0x5) {
+                    ImGui::Separator();
+                    ImGui::TextDisabled("subEvnt 2 and 5 use this table.");
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P1 Timer", 2, { 0x81c15b }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c15d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd", 2, { 0x81c15f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c161 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd", 2, { 0x81c163 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer", 2, { 0x81c165 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c167 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd", 2, { 0x81c169 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c16b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd", 2, { 0x81c16d }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P3 Timer", 2, { 0x81c16f }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81c171 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpd", 2, { 0x81c173 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81c175 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpd", 2, { 0x81c177 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                }
+                if (event->eventSubId == 0x3) {
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P1 Timer", 2, { 0x81c17b }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c17d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd", 2, { 0x81c17f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c181 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd", 2, { 0x81c183 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer", 2, { 0x81c185 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c187 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd", 2, { 0x81c189 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c18b }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd", 2, { 0x81c18d }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P3 Timer", 2, { 0x81c18f }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81c191 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpd", 2, { 0x81c193 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81c195 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpd", 2, { 0x81c197 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                }
+                if (event->eventSubId == 0x4) {
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P1 Timer", 2, { 0x81c19b }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpdSub", 2, { 0x81c19d }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 xSpd", 2, { 0x81c19f }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpdSub", 2, { 0x81c1a1 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P1 ySpd", 2, { 0x81c1a3 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P2 Timer", 2, { 0x81c1a5 }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpdSub", 2, { 0x81c1a7 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 xSpd", 2, { 0x81c1a9 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpdSub", 2, { 0x81c1ab }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P2 ySpd", 2, { 0x81c1ad }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+                    DrawNumberPropertySliderHex(state, "P3 Timer", 2, { 0x81c1af }, 0x0, 0xFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpdSub", 2, { 0x81c1b1 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 xSpd", 2, { 0x81c1b3 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpdSub", 2, { 0x81c1b5 }, 0x0, 0xFFFF, true);
+                    DrawNumberPropertySliderHex(state, "P3 ySpd", 2, { 0x81c1b7 }, 0x0, 0xFFFF, true);
+                    ImGui::Separator();
+
+                }
+            }
+            
             if (event->eventId == 0x17) {
 
                 if (event->eventSubId == 0x0) {
@@ -1524,6 +1767,113 @@ namespace {
                 }
             }
 
+            // items 
+            switch (event->eventId) {
+			
+            case 0x18:
+                DrawNumberPropertySliderHex(state, "HitBox Small Heart", 2, { 0x81a67a }, 0x0, 0x1F, true);
+				break;
+            case 0x19:
+                DrawNumberPropertySliderHex(state, "HitBox Big Heart", 2, { 0x81a67c }, 0x0, 0x1F, true);
+                break;
+            case 0x1a:
+                DrawNumberPropertySliderHex(state, "HitBox Dagger", 2, { 0x81a67e }, 0x0, 0x1F, true);
+                break;
+            case 0x1b:
+                DrawNumberPropertySliderHex(state, "HitBox Axe", 2, { 0x81a680 }, 0x0, 0x1F, true);
+                break;
+            case 0x1c:
+                DrawNumberPropertySliderHex(state, "HitBox HolyWater", 2, { 0x81a682 }, 0x0, 0x1F, true);
+                break;
+            case 0x1d:
+                DrawNumberPropertySliderHex(state, "HitBox Cross", 2, { 0x81a684 }, 0x0, 0x1F, true);
+                break;
+            case 0x1e:
+                DrawNumberPropertySliderHex(state, "HitBox Clock", 2, { 0x81a686 }, 0x0, 0x1F, true);
+                break;
+            case 0x1f:
+                DrawNumberPropertySliderHex(state, "HitBox Rossery", 2, { 0x81a688 }, 0x0, 0x1F, true);
+                break;
+            case 0x20:
+                DrawNumberPropertySliderHex(state, "HitBox Potion", 2, { 0x81a68a }, 0x0, 0x1F, true);
+                break;
+            case 0x21:
+                DrawNumberPropertySliderHex(state, "HitBox WhipUpgrad", 2, { 0x81a68c }, 0x0, 0x1F, true);
+                break;
+            case 0x22:
+                DrawNumberPropertySliderHex(state, "HitBox Money", 2, { 0x81a68e }, 0x0, 0x1F, true);
+                break;
+            case 0x23:
+                DrawNumberPropertySliderHex(state, "HitBox Double", 2, { 0x81a690 }, 0x0, 0x1F, true);
+                break;
+            case 0x24:
+                DrawNumberPropertySliderHex(state, "HitBox Tripple", 2, { 0x81a692 }, 0x0, 0x1F, true);
+                break;
+            case 0x25:
+                DrawNumberPropertySliderHex(state, "HitBox smallMeat", 2, { 0x81a694 }, 0x0, 0x1F, true);
+                break;
+            case 0x26:
+                DrawNumberPropertySliderHex(state, "HitBox bigMeat", 2, { 0x81a696 }, 0x0, 0x1F, true);
+                break;
+            case 0x27:
+                DrawNumberPropertySliderHex(state, "HitBox orb", 2, { 0x81a698 }, 0x0, 0x1F, true);
+                break;
+            case 0x28:
+                DrawNumberPropertySliderHex(state, "HitBox oneUp", 2, { 0x81a69a }, 0x0, 0x1F, true);
+                break;
+            }  
+
+            if (event->eventId == 0x2b) {
+                ImGui::Separator();
+                //ImGui::TextDisabled("This is global and not expanded.");
+                ImGui::TextDisabled("View the value in Mesens Tilemap Viewer.");
+                ImGui::Text("VRAM address. Two screens (0x0-3ff left | 0x400-7ff right)");
+                ImGui::Text("Row has 0x20 tiles to make a screen.");
+                ImGui::Separator();
+
+                ImGui::Separator();
+                if (event->eventSubId == 0x0) {
+                    DrawNumberPropertySliderHex(state, "TilemapAddressWord", 2, { 0x81b903 }, 0x0, 0x7FF, true);   
+                }
+                if (event->eventSubId == 0x1) {
+                    DrawNumberPropertySliderHex(state, "TilemapAddressWord", 2, { 0x81b905 }, 0x0, 0x7FF, true);
+                }
+                if (event->eventSubId == 0x2) {
+                    DrawNumberPropertySliderHex(state, "TilemapAddressWord", 2, { 0x81b907 }, 0x0, 0x7FF, true);
+                }
+                ImGui::Separator();
+                ImGui::Text("Block Animation 2 (blocks stacked)");
+                ImGui::Separator();
+                DrawNumberPropertySlider(state, "F1 Gate block ", 2, { 0x81b909 }, 0x0, 0x3FF, true);
+                DrawNumberPropertySlider(state, "F1 Gate timer ", 2, { 0x81b90b }, 0x0, 0x1F, true);
+                                                          
+                DrawNumberPropertySlider(state, "F2 Gate block ", 2, { 0x81b90d }, 0x0, 0x3FF, true);
+                DrawNumberPropertySlider(state, "F2 Gate timer ", 2, { 0x81b90f }, 0x0, 0x1F, true);
+                                                     
+                DrawNumberPropertySlider(state, "F3 Gate block ", 2, { 0x81b911 }, 0x0, 0x3FF, true);
+                DrawNumberPropertySlider(state, "F3 Gate timer ", 2, { 0x81b913 }, 0x0, 0x1F, true);
+                                                        
+                DrawNumberPropertySlider(state, "F4 Gate block ", 2, { 0x81b915 }, 0x0, 0x3FF, true);
+                DrawNumberPropertySlider(state, "F4 Gate timer ", 2, { 0x81b917 }, 0x0, 0x1F, true);
+                                                     
+                ImGui::Text("Open Close Block Animator. This is global and not expanded.");
+                ImGui::Separator();
+                DrawNumberPropertySlider(state, "F5 Gate block ", 2, { 0x81b91b }, 0x0, 0x3FF, true);
+                DrawNumberPropertySlider(state, "F6 Gate timer ", 2, { 0x81b91d }, 0x0, 0x1F, true);
+                                                        
+                DrawNumberPropertySlider(state, "F7 Gate block ", 2, { 0x81b91f }, 0x0, 0x3FF, true);
+                DrawNumberPropertySlider(state, "F8 Gate timer ", 2, { 0x81b921 }, 0x0, 0x1F, true);
+                                                      
+                DrawNumberPropertySlider(state, "F9 Gate block ", 2, { 0x81b923 }, 0x0, 0x3FF, true);
+                DrawNumberPropertySlider(state, "FA Gate timer ", 2, { 0x81b925 }, 0x0, 0x1F, true);
+                                                          
+                DrawNumberPropertySlider(state, "FB Gate block ", 2, { 0x81b927 }, 0x0, 0x3FF, true);
+                DrawNumberPropertySlider(state, "FC Gate timer ", 2, { 0x81b929 }, 0x0, 0x1F, true);
+                ImGui::Separator();                                                     
+            
+
+            }
+
             if (event->eventId == 0x2F) {
                 if (ImGui::CollapsingHeader("Choose Droped Item ID", ImGuiTreeNodeFlags_DefaultOpen)) {
                    DrawNumberProperty(state, "Breakable Wall Item", 1, { EVENT_BREAKABLE_WALL_ITEM_BASE + ((event->eventSubId) & 0x0F) });
@@ -1531,6 +1881,77 @@ namespace {
                 }
             }
             
+            if (event->eventId == 0x48) {
+                 
+                if (event->eventSubId == 0x0) {
+                    ImGui::TextDisabled("SubID 00 HydraBoss          ");
+                }
+                if (event->eventSubId == 0x1) {
+                    ImGui::TextDisabled("SubID 01 waterCurrent       ");
+                }
+                if (event->eventSubId == 0x2) {
+
+                    ImGui::TextDisabled("SubID 02 Chandelire         ");
+                }
+                if (event->eventSubId == 0x3) {
+                    ImGui::TextDisabled("SubID 03 exitBG             ");
+                }
+                if (event->eventSubId == 0x4) {
+                    ImGui::TextDisabled("SubID 04 unused             ");
+                }
+                if (event->eventSubId == 0x5) {
+                    ImGui::TextDisabled("SubID 05 SecretBlockGra     ");
+                }
+                if (event->eventSubId == 0x6) {
+                    ImGui::TextDisabled("SubID 06 camaraLockTop      ");
+                }
+                if (event->eventSubId == 0x7) {
+                    ImGui::TextDisabled("SubID 07 collusionMod7RoRoo ");
+                }
+                if (event->eventSubId == 0x8) {
+                    ImGui::TextDisabled("SubID 08 BG Scrolling UpDown ");
+                }
+                if (event->eventSubId == 0x9) {
+                    ImGui::TextDisabled("SubID 09 fance rise up");
+                }
+                if (event->eventSubId == 0xa) {
+                    ImGui::TextDisabled("SubID 0a fast BG up scroll");
+                }
+                if (event->eventSubId == 0xb) {
+                    ImGui::TextDisabled("SubID 0b mud damag");
+                }
+                if (event->eventSubId == 0xc) {
+                    ImGui::TextDisabled("SubID 0c BGAqiuaduct01");
+                }
+                if (event->eventSubId == 0xd) {
+                    ImGui::TextDisabled("SubID 0c BGAqiuaduct01");
+                }
+                if (event->eventSubId == 0xe) {
+                    ImGui::TextDisabled("SubID 0c BGAqiuaduct01");
+                }
+                if (event->eventSubId == 0xf) {
+                    ImGui::TextDisabled("SubID 0f BGAqiuaduct02");
+                }
+                if (event->eventSubId == 0x10) {
+                    ImGui::TextDisabled("SubID 10 draw bubbles with collusion type 2");
+                }
+                if (event->eventSubId == 0x11) {
+                    ImGui::TextDisabled("SubID_11                    ");
+                }
+                if (event->eventSubId == 0x12) {
+                    ImGui::TextDisabled("SubID 12                    ");
+                }
+                if (event->eventSubId == 0x13) {
+                    ImGui::TextDisabled("SubID 13                    ");
+                }
+                if (event->eventSubId == 0x14) {
+                    ImGui::TextDisabled("SubID 14_deathExitTourches  ");
+                }
+                if (event->eventSubId == 0x15) {
+                    ImGui::TextDisabled("SubID 15_draculasSecret     ");
+                }
+            }
+
             if (event->eventId == 0x62) {
                 if (event->eventSubId == 0x0) {
                     DrawNumberPropertySliderHex(state, "P1 Timer", 2,   { 0x81fc1c }, 0x0, 0xFFF, true);
@@ -1710,16 +2131,21 @@ namespace {
     static void DrawPlayerProperties(EditorState& state)
     {
         if (ImGui::CollapsingHeader("Player", ImGuiTreeNodeFlags_DefaultOpen)) {
-            ComboRow("Whip", g_propertyState.whip, { "Leather", "Chain0", "Chain1" });
+            
             const unsigned whip = static_cast<unsigned>(g_propertyState.whip);
+            ComboRow("Subweapon", g_propertyState.subweapon, { "Knife", "Axe", "Holy Water", "Cross", "Stop Watch" });
+            DrawNumberProperty(state, "Subweapon damage", 2, { SUBWEAPON_DAMAGE_BASE + 2 * (static_cast<unsigned>(g_propertyState.subweapon) + 1) }); 
+            DrawNumberProperty(state, "Subweapon Cost", 2, { SUBWEAPON_COST_BASE + 2 * (static_cast<unsigned>(g_propertyState.subweapon) + 1) }); 
+            DrawNumberProperty(state, "Second Quest", 2, { SECOND_QUEST_DAMAGE });
+            ImGui::Separator();
+            ComboRow("Whip", g_propertyState.whip, { "Leather", "Chain0", "Chain1" });            
             DrawNumberProperty(state, "Whip length", 2, { 0x819261 + 2 * whip });
             DrawNumberProperty(state, "Whip full damage", 2, { 0x81A6EC + 4 * whip });
             DrawNumberProperty(state, "Whip partial damage", 2, { 0x81A6EC + 4 * whip + 2 });
-    
-            ComboRow("Subweapon", g_propertyState.subweapon, { "Knife", "Axe", "Holy Water", "Cross" });
-            DrawNumberProperty(state, "Subweapon damage", 2, { SUBWEAPON_DAMAGE_BASE + 2 * (static_cast<unsigned>(g_propertyState.subweapon) + 1) });
-    //        DrawKnifePlatformPickupProperty(state);   // function is moved to ..bkp/trash.txt and the top line is dublicated and documented out here
-    //        DrawAxeBlockBreakerProperty(state);
+            ImGui::Separator();
+            
+            //        DrawKnifePlatformPickupProperty(state);   // function is moved to ..bkp/trash.txt and the top line is dublicated and documented out here
+            //        DrawAxeBlockBreakerProperty(state);
     
             static const std::vector<MovementProperty> movements = {
                 { "Walking Right", { 0x80A665 }, 0x80A65F, false, true },
@@ -1769,11 +2195,18 @@ namespace {
             DrawNumberProperty(state, "Layer Transperent Mask", 2, { LevelAddress(LEVEL_BG_PROPERTY_MASK_BASE, state, 2) });
             DrawFlaggedWordProperty(state, "Layer Scroll Modes", "Layer behavior flag", { LevelAddress(LEVEL_BG_SCROLL_BASE, state, 2) }, 0x8000);
             //DrawNumberProperty(state, "Event direction", 1, { LevelAddress(LEVEL_LOAD_DIRECTION, state) });       
-            DrawNumberPropertyCombo(state, "Event load direction 0 Right | 1 Left | 2 Down | 3 Up", 1, { LevelAddress(LEVEL_LOAD_DIRECTION, state) }, 0x0, 0x3, true);
+            DrawNumberPropertyCombo(state, "Event load direction", 1, { LevelAddress(LEVEL_LOAD_DIRECTION, state) }, 0x0, 0x3, true);
+			ImGui::TextDisabled("0 (Right)      1 (Left)      2 (Up)      3 (Down)"); 
+            ImGui::TextDisabled("This are defaults and are switched when using odd entrances.");
             ImGui::Separator();
-            DrawNumberProperty(state, "!Always 3 cam behavior", 2, { LevelAddress(LEVEL_ALWAYS_3SCRL, state,2) });
             
-
+			if (state.session.IsExpandedRom()) {
+                DrawNumberProperty(state, "Collision behavior type", 2, { LevelAddress(LEVEL_ALWAYS_3SCRL, state,2) });
+            }
+            else {
+                DrawNumberProperty(state, "!Always 3 cam behavior", 2, { LevelAddress(LEVEL_ALWAYS_3SCRL, state,2) });
+            }
+            
             //reused or not properly implemented stuff..
            //const unsigned deathBase = state.session.Region() == 0 ? 0x81B395 : 0x81B369;
            //DrawNumberProperty(state, "Death level", 1, { LevelAddress(deathBase, state) }); // unexpanded death level??

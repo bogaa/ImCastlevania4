@@ -64,6 +64,7 @@ namespace {
     case 0x10: return 0x8EB9;
     case 0x11:
     case 0x12: return 0x8AF4;
+    case 0x14: return 0xA619;
     case 0x16: return 0xA682;
     case 0x17: return 0xA6EF;
     case 0x2A: return 0xAD7D;
@@ -184,6 +185,14 @@ namespace {
     return 0;
 }
     
+//static bool TryGetSpriteSlotOffset(SC4Core & core, const EventInfo & event, unsigned& slotOffset)
+//{
+//    std::set<WORD> activeEnemyIds;
+//    core.GetActiveEnemyId(activeEnemyIds);
+//    return true;
+//
+//}
+
     static bool TryGetSpriteSlotOffset(const SC4Core& core, const EventInfo& event, unsigned& slotOffset)
 {
     slotOffset = 0;
@@ -634,12 +643,16 @@ void LevelRenderer::Draw(ImVec2 available, EditorState& state)
     RomSession& session = state.session;
     float zoom = state.zoom;
 
-    ImGui::BeginChild("level-scroll", available, false, ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::BeginChild("level-scroll", available, false, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
     if (state.internalEmulatorRunning && state.followInternalEmulatorCamera && state.hasInternalEmulatorCamera) {
-      //  const float targetX = static_cast<float>(state.internalEmulatorCameraX) * zoom;
-      //  const float targetY = static_cast<float>(state.internalEmulatorCameraY) * zoom;
-      //  ImGui::SetScrollX(std::clamp(targetX, 0.0f, ImGui::GetScrollMaxX()));
-      //  ImGui::SetScrollY(std::clamp(targetY, 0.0f, ImGui::GetScrollMaxY()));
+		const float targetX = static_cast<float>(state.internalEmulatorCameraX);
+        const float targetY = static_cast<float>(state.internalEmulatorCameraY);
+
+        // rewrite so it scrolls with emulator again 
+        //const float targetX = static_cast<float>(state.internalEmulatorCameraX) * zoom;
+        //const float targetY = static_cast<float>(state.internalEmulatorCameraY) * zoom;
+        ImGui::SetScrollX(std::clamp(targetX, 0.0f, ImGui::GetScrollMaxX()));
+        ImGui::SetScrollY(std::clamp(targetY, 0.0f, ImGui::GetScrollMaxY()));
     }
     const bool levelHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
     if (levelHovered && ImGui::GetIO().MouseWheel != 0.0f) {
@@ -712,11 +725,13 @@ void LevelRenderer::DrawGridOverlay(ImDrawList* drawList, ImVec2 imageMin, float
     }
 
     const ImU32 minorColor = IM_COL32(255, 255, 255, 42);
-    const ImU32 majorColor = IM_COL32(255, 230, 80, 72);
+    const ImU32 majorColor = IM_COL32(255, 230, 80, 62);
+    const ImU32 ScreenColor = IM_COL32(80, 200, 255, 150);
     const float width = static_cast<float>(textureWidth_) * zoom;
     const float height = static_cast<float>(textureHeight_) * zoom;
     const int columns = textureWidth_ / 16;
     const int rows = textureHeight_ / 16;
+    const int screen = textureHeight_ / 128;
     for (int x = 0; x <= columns; ++x) {
         const float px = imageMin.x + static_cast<float>(x) * step;
         const bool major = (x % 2) == 0;
@@ -726,6 +741,10 @@ void LevelRenderer::DrawGridOverlay(ImDrawList* drawList, ImVec2 imageMin, float
         const float py = imageMin.y + static_cast<float>(y) * step;
         const bool major = (y % 2) == 0;
         drawList->AddLine(ImVec2(imageMin.x, py), ImVec2(imageMin.x + width, py), major ? majorColor : minorColor, major ? 1.2f : 1.0f);
+    }
+    for (int x = 256; x < textureWidth_; x += 256) {
+        const float px = imageMin.x + static_cast<float>(x) * zoom;
+        drawList->AddLine(ImVec2(px, imageMin.y), ImVec2(px, imageMin.y + height), ScreenColor, 1.2f);
     }
 }
 
@@ -884,6 +903,8 @@ void LevelRenderer::DrawBlockEditor(EditorState& state)
     }
     ImGui::SameLine();
     ImGui::TextDisabled("%d blocks", blockCount);
+    ImGui::SameLine();
+    ImGui::TextDisabled("   Left click drawing has SHIFT modifyer.");
 
     ImGui::TextUnformatted("Blocks");
     ImGui::BeginChild("block-editor-block-list", ImVec2(0.0f, 142.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
@@ -908,7 +929,7 @@ void LevelRenderer::DrawBlockEditor(EditorState& state)
         const bool blockHovered = ImGui::IsItemHovered();
         if (ImGui::BeginPopupContextItem("block-actions")) {
             state.selectedBlock = static_cast<uint16_t>(block);
-            const auto pasteBlock = [&](bool flipHorizontal, bool flipVertical) {
+            const auto pasteBlock = [&](bool flipHorizontal, bool flipVertical,bool layerPriorityOn, bool layerPriorityOff) {
                 const unsigned destinationOffset = GetBlockOffset(core, static_cast<uint16_t>(block));
                 WORD* destinationTiles = reinterpret_cast<WORD*>(core.ram + destinationOffset);
                 PushUndo(state);
@@ -923,6 +944,12 @@ void LevelRenderer::DrawBlockEditor(EditorState& state)
                             }
                             if (flipVertical) {
                                 tileMap ^= 0x8000;
+                            }
+                            if (layerPriorityOn) {
+                                tileMap |= 0x2000;
+                            }
+                            if (layerPriorityOff) {
+                                tileMap &= ~static_cast<WORD>(0x2000);
                             }
                         }
                         destinationTiles[y * 4 + x] = tileMap;
@@ -945,16 +972,22 @@ void LevelRenderer::DrawBlockEditor(EditorState& state)
                 ImGui::BeginDisabled();
             }
             if (ImGui::MenuItem("Paste Replace Block")) {
-                pasteBlock(false, false);
+                pasteBlock(false, false, false, false);
             }
             if (ImGui::MenuItem("Paste Horizontal Flipped")) {
-                pasteBlock(true, false);
+                pasteBlock(true, false, false, false);
             }
             if (ImGui::MenuItem("Paste Vertical Flipped")) {
-                pasteBlock(false, true);
+                pasteBlock(false, true, false, false);
             }
             if (ImGui::MenuItem("Paste Both Flipped")) {
-                pasteBlock(true, true);
+                pasteBlock(true, true, false, false);
+            }
+            if (ImGui::MenuItem("Paste Layer Priority On")) {
+                pasteBlock(false, false, true, false);
+            }
+            if (ImGui::MenuItem("Paste Layer Priority Off")) {
+                pasteBlock(false, false, false, true);
             }
             if (!hasBlockClipboard_) {
                 ImGui::EndDisabled();
@@ -1037,10 +1070,14 @@ void LevelRenderer::DrawBlockEditor(EditorState& state)
         const ImVec2 cellMin = ImGui::GetCursorScreenPos();
         ImGui::InvisibleButton("cell", ImVec2(cellSize, cellSize));
         if (ImGui::IsItemHovered()) {
-            if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+            if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                paintCell(cell);
+               if (ImGui::GetIO().KeyShift) {
+                   const int maxTile = core.isMode7() ? 0xFF : 0x3FF;
+                   state.selectedTile = static_cast<uint16_t>((std::min)(maxTile, static_cast<int>(state.selectedTile) + 1));
+               }
             } else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-                copyCellToBrush(cell);
+               copyCellToBrush(cell);
             }
         }
         if (ImGui::IsItemVisible()) {
@@ -1227,13 +1264,13 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
     }
     ImGui::SameLine();
     ImGui::SetNextItemWidth(120.0f);
-    if (ImGui::InputInt("##custom-behavior", &state.customBehavior, 2, 0x10,
+    if (ImGui::InputInt("##custom-behavior", &state.customTileCollisionType, 2, 0x10,
         ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
-        state.customBehavior = std::clamp(state.customBehavior, 0, 0xFE);
+        state.customTileCollisionType = std::clamp(state.customTileCollisionType, 0, 0xFE);
     }
     ImGui::SameLine();
     if (ImGui::Button("Costum")) {
-        applyBehavior(static_cast<WORD>(state.customBehavior));
+        applyBehavior(static_cast<WORD>(state.customTileCollisionType));
     }
     
     if (!core.expandedROM) {
@@ -1310,7 +1347,7 @@ void LevelRenderer::DrawTileBehaviorEditor(EditorState& state)
         }
         if (ImGui::IsItemHovered()) {
             const auto nameIt = TileTypeMap.find(behavior);
-            ImGui::SetTooltip("Tile %u\n%s %u", tile, nameIt != TileTypeMap.end() ? nameIt->second.c_str() : "Type", behavior & 0xFF);
+			ImGui::SetTooltip("Tile %u\n%s  IDX %X", tile, nameIt != TileTypeMap.end() ? nameIt->second.c_str() : "Type", ((behavior & 0xFF) - 0xc8) / 2); // collusion address converted to the index used in game code.
         }
         if (ImGui::IsItemVisible()) {
             const bool selected = selectedTiles[tile];

@@ -19,6 +19,7 @@ struct EditorState {
     bool showHelp = false;
     bool showInternalEmulator = true;
     bool internalEmulatorRunning = false;
+    float emulatorScale = 1.0f;
     bool followInternalEmulatorCamera = true;
     bool hasInternalEmulatorCamera = false;
     int internalEmulatorCameraX = 0;
@@ -28,7 +29,7 @@ struct EditorState {
     uint16_t selectedTile = 0;
     uint16_t selectedBehaviorTile = 0;
     std::vector<uint16_t> selectedBehaviorTiles;
-    int customBehavior = 0xCA;
+    int customTileCollisionType = 0xCA;
     int blockBrushWidth = 1;
     int blockBrushHeight = 1;
     std::vector<uint16_t> blockBrush;

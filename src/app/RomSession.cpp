@@ -481,8 +481,10 @@ bool RomSession::ExpandRom()        // moved to last stage as I implemented the 
     }
 
 
-    if (!ApplyAsarPatch("main.asm")) {
+    if (!ApplyAsarPatch("expand.asm")) {
+        lastError_ = " ROM expansion is missing code patches, put the ROM \ along this executable. Close app and try again.\ Or go to Global Propertys and choose the expand.asm \ in the direcotry of the executable.";
         return false;
+    
     }
 
     BeginEdit();
